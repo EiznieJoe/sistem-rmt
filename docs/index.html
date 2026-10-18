@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Permohonan Bantuan RMT</title>
-<meta name="description" content="Borang permohonan Rancangan Makanan Tambahan (RMT) dan semakan status permohonan.">
+<title>Kelayakan RMT</title>
+<meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; form-action 'self'; base-uri 'none'; object-src 'none'">
 <link rel="stylesheet" href="assets/app.css">
@@ -12,181 +12,163 @@
 <body>
 
 <header class="site">
-  <h1>Permohonan Bantuan RMT</h1>
-  <p>Rancangan Makanan Tambahan &middot; sekolah rendah</p>
+  <div class="topbar">
+    <div>
+      <h1>Pengurusan Kelayakan RMT</h1>
+      <p id="subtajuk">Rancangan Makanan Tambahan &middot; SPK Kewangan Bil. 1 Tahun 2026</p>
+    </div>
+    <button type="button" id="btn-keluar" hidden>Log keluar</button>
+  </div>
 </header>
 
 <main>
-  <div class="tabs" role="tablist">
-    <button id="tab-mohon" role="tab" aria-selected="true"  aria-controls="pane-mohon">Permohonan baharu</button>
-    <button id="tab-semak" role="tab" aria-selected="false" aria-controls="pane-semak">Semak status</button>
-  </div>
+  <!-- ===== LOG MASUK ===== -->
+  <form id="borang-masuk" class="card card-sempit" novalidate>
+    <h2>Log masuk</h2>
+    <p class="hint">Akaun guru kelas dan penyelaras sahaja. Akaun didaftarkan oleh pentadbir sistem.</p>
+    <label>Emel <input id="emel" type="email" required autocomplete="username"></label>
+    <label>Kata laluan <input id="katalaluan" type="password" required autocomplete="current-password"></label>
+    <button type="submit" class="primary" id="btn-masuk">Log masuk</button>
+    <div class="msg" id="msg-masuk" hidden></div>
+  </form>
 
-  <!-- ============ PERMOHONAN BAHARU ============ -->
-  <section id="pane-mohon" role="tabpanel" aria-labelledby="tab-mohon">
-    <form id="borang" class="card" novalidate>
-      <h2>Maklumat murid</h2>
-      <p class="hint">Satu borang untuk seorang murid. Kalau ada lebih seorang anak, hantar borang berasingan.</p>
-
-      <label>Sekolah
-        <select id="sekolah_id" required><option value="">Memuatkan&hellip;</option></select>
-      </label>
-
-      <div class="row">
-        <label>Nama penuh murid
-          <input id="murid_nama" maxlength="150" required autocomplete="off">
-        </label>
-        <label>No. Kad Pengenalan murid
-          <input id="murid_ic" inputmode="numeric" maxlength="14" placeholder="12 angka" required autocomplete="off">
-        </label>
+  <!-- ===== PENYELARAS ===== -->
+  <section id="pane-selaras" hidden>
+    <div class="card">
+      <h2>Ringkasan sekolah</h2>
+      <div class="hero">
+        <div class="nilai" id="hero-nilai">—</div>
+        <div class="label" id="hero-label">murid layak menerima RMT</div>
+        <p class="nota" id="hero-nota"></p>
       </div>
+    </div>
 
-      <div class="row">
-        <label>Tahun
-          <select id="murid_tahun" required>
-            <option value="">Pilih</option>
-            <option>1</option><option>2</option><option>3</option>
-            <option>4</option><option>5</option><option>6</option>
+    <div class="tiles" id="tiles"></div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>Pecahan ikut kelas</h2>
+      <div class="scroll"><table>
+        <thead><tr>
+          <th>Kelas</th><th>Guru kelas</th>
+          <th class="num">Murid</th><th class="num">Layak</th>
+          <th class="num">Tidak layak</th><th class="num">Perlu semak</th>
+          <th class="num">Belum disahkan</th>
+        </tr></thead>
+        <tbody id="jadual-kelas"></tbody>
+      </table></div>
+      <div class="msg warn" id="amaran-guru" hidden></div>
+    </div>
+
+    <div class="card">
+      <h2>Tetapan kelayakan</h2>
+      <p class="hint">Mengubah nilai di sini mengubah setiap jumlah di atas serta-merta, dan direkod dalam jejak audit.</p>
+      <div id="senarai-tetapan"></div>
+      <div class="msg" id="msg-tetapan" hidden></div>
+    </div>
+
+    <div class="card">
+      <h2>Senarai murid</h2>
+      <div class="filters">
+        <label>Kelayakan
+          <select id="f-kelayakan">
+            <option value="">Semua</option>
+            <option value="LAYAK">Layak</option>
+            <option value="TIDAK_LAYAK">Tidak layak</option>
+            <option value="PERLU_SEMAK">Perlu semak</option>
+            <option value="LUAR_SKOP">Luar skop</option>
           </select>
         </label>
-        <label>Kelas <span class="opt">(pilihan)</span>
-          <input id="murid_kelas" maxlength="40" autocomplete="off">
-        </label>
+        <label>Kelas <select id="f-kelas"><option value="">Semua</option></select></label>
+        <button type="button" id="btn-muat-senarai">Papar</button>
+        <button type="button" id="btn-csv">Eksport CSV untuk JBPS</button>
       </div>
-
-      <h2 class="mt-lg">Maklumat penjaga</h2>
-      <p class="hint">Kami tidak meminta No. Kad Pengenalan penjaga — tidak perlu untuk proses ini.</p>
-
-      <div class="row">
-        <label>Nama penjaga
-          <input id="penjaga_nama" maxlength="150" required autocomplete="off">
-        </label>
-        <label>No. telefon
-          <input id="penjaga_telefon" inputmode="tel" maxlength="20" placeholder="01x-xxxxxxx" required autocomplete="off">
-        </label>
-      </div>
-
-      <label>Hubungan dengan murid
-        <select id="penjaga_hubungan" required>
-          <option value="">Pilih</option>
-          <option>Bapa</option><option>Ibu</option>
-          <option>Penjaga sah</option><option>Datuk/Nenek</option>
-          <option>Lain-lain</option>
-        </select>
-      </label>
-
-      <h2 class="mt-lg">Maklumat isi rumah</h2>
-
-      <div class="row">
-        <label>Bilangan orang dalam isi rumah
-          <input id="bil_isi_rumah" type="number" min="1" max="30" required>
-        </label>
-        <label>Pendapatan kasar isi rumah sebulan (RM)
-          <input id="pendapatan_isi_rumah" type="number" min="0" step="0.01" required>
-        </label>
-      </div>
-      <p class="hint" id="perkapita"></p>
-
-      <div class="check">
-        <input type="checkbox" id="ekasih">
-        <span><label for="ekasih" class="inline">Isi rumah berdaftar dalam eKasih</label></span>
-      </div>
-      <label id="lbl-ekasih" hidden>No. eKasih
-        <input id="no_ekasih" maxlength="40" autocomplete="off">
-      </label>
-
-      <h2 class="mt-lg">Akuan</h2>
-
-      <div class="check">
-        <input type="checkbox" id="akuan_benar" required>
-        <span>Saya mengaku maklumat di atas benar. Saya faham maklumat palsu boleh menyebabkan permohonan ditolak dan bantuan ditarik.</span>
-      </div>
-
-      <div class="check">
-        <input type="checkbox" id="persetujuan_pdpa" required>
-        <span>Saya bersetuju maklumat ini diproses untuk tujuan permohonan RMT sahaja, disimpan selama 3 tahun, dan hanya boleh dilihat oleh pegawai sekolah yang terlibat.
-          <a href="privasi.html" target="_blank" rel="noopener">Baca notis privasi</a>.</span>
-      </div>
-
-      <button type="submit" class="primary" id="btn-hantar">Hantar permohonan</button>
-      <div class="msg" id="msg-mohon" hidden></div>
-    </form>
-
-    <div class="card" id="siap" hidden>
-      <h2>Permohonan diterima</h2>
-      <p>Simpan nombor rujukan ini. Anda perlukan nombor ini bersama No. Kad Pengenalan murid untuk menyemak status.</p>
-      <p class="ref" id="ref-baru"></p>
-      <div class="actions">
-        <button type="button" class="ghost" id="btn-salin">Salin nombor rujukan</button>
-        <button type="button" class="ghost" id="btn-baru">Hantar borang lain</button>
-      </div>
+      <div class="msg" id="msg-senarai" hidden></div>
+      <div class="scroll"><table>
+        <thead><tr><th>Nama</th><th>Kelas</th><th class="num">PIR</th>
+          <th>Kelayakan</th><th>Laluan</th><th>Sebab</th></tr></thead>
+        <tbody id="jadual-murid"></tbody>
+      </table></div>
     </div>
   </section>
 
-  <!-- ============ SEMAK STATUS ============ -->
-  <section id="pane-semak" role="tabpanel" aria-labelledby="tab-semak" hidden>
-    <form id="borang-semak" class="card" novalidate>
-      <h2>Semak status permohonan</h2>
-      <div class="row">
-        <label>No. rujukan
-          <input id="s_ruj" maxlength="20" placeholder="RMT-26-XXXXXXXX" required autocomplete="off">
-        </label>
-        <label>No. Kad Pengenalan murid
-          <input id="s_ic" inputmode="numeric" maxlength="14" required autocomplete="off">
-        </label>
-      </div>
-      <button type="submit" class="primary">Semak</button>
-      <div class="msg" id="msg-semak" hidden></div>
-    </form>
-
-    <div class="card" id="hasil" hidden>
-      <div class="topbar">
-        <h2 class="m0">Status permohonan</h2>
-        <span id="h-badge"></span>
-      </div>
-      <dl class="kv mt-md" id="h-kv"></dl>
-      <div class="msg warn" id="h-betulkan" hidden></div>
-      <div class="msg err"  id="h-tolak" hidden></div>
-      <div class="actions">
-        <button type="button" class="ghost" id="btn-betul" hidden>Betulkan dan hantar semula</button>
-        <button type="button" class="ghost danger" id="btn-tarik" hidden>Tarik balik permohonan</button>
-      </div>
+  <!-- ===== GURU KELAS ===== -->
+  <section id="pane-guru" hidden>
+    <div class="card">
+      <h2>Kelas saya</h2>
+      <p class="hint">Data datang dari iDME. Betulkan hanya yang salah atau kosong — selebihnya guna seadanya.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Kelas</th><th class="num">Murid</th><th class="num">Layak</th>
+          <th class="num">Perlu semak</th><th class="num">Belum disahkan</th><th></th></tr></thead>
+        <tbody id="jadual-kelas-guru"></tbody>
+      </table></div>
+      <div class="msg" id="msg-guru" hidden></div>
     </div>
 
-    <form class="card" id="borang-betul" hidden novalidate>
-      <h2>Betulkan maklumat</h2>
-      <p class="hint">Isi hanya medan yang perlu diubah. Medan yang dibiarkan kosong akan kekal seperti sebelum ini.</p>
+    <div class="card" id="kad-murid" hidden>
+      <div class="topbar">
+        <h2 id="tajuk-kelas" style="margin:0"></h2>
+        <button type="button" id="btn-sahkan-kelas">Sahkan semua yang jelas</button>
+      </div>
+      <div class="formula" id="formula-guru"></div>
+      <div class="msg" id="msg-kelas" hidden></div>
+      <div class="scroll"><table>
+        <thead><tr><th>Nama</th><th class="num">Penjaga 1</th><th class="num">Penjaga 2</th>
+          <th class="num">PIR</th><th>Kelayakan</th><th>Sah</th></tr></thead>
+        <tbody id="jadual-murid-guru"></tbody>
+      </table></div>
+    </div>
+
+    <div class="card" id="kad-edit" hidden>
+      <h2 id="tajuk-edit"></h2>
+      <dl class="kv" id="kv-murid"></dl>
+      <div class="msg" id="msg-kelayakan" hidden></div>
       <div class="row">
-        <label>Nama penuh murid <input id="b_murid_nama" maxlength="150" autocomplete="off"></label>
-        <label>Tahun
-          <select id="b_murid_tahun"><option value="">Tiada perubahan</option>
-            <option>1</option><option>2</option><option>3</option>
-            <option>4</option><option>5</option><option>6</option></select>
+        <label>Pendapatan penjaga 1 (RM) <input id="e-p1" type="number" min="0" step="0.01"></label>
+        <label>Pendapatan penjaga 2 (RM) <input id="e-p2" type="number" min="0" step="0.01"></label>
+      </div>
+      <div class="row">
+        <label>Tanggungan <input id="e-tanggungan" type="number" min="1" max="30"></label>
+        <label>Warganegara
+          <select id="e-warganegara">
+            <option value="">(tiada perubahan)</option>
+            <option>WARGANEGARA</option>
+            <option>BUKAN WARGANEGARA</option>
+          </select>
         </label>
       </div>
       <div class="row">
-        <label>Nama penjaga <input id="b_penjaga_nama" maxlength="150" autocomplete="off"></label>
-        <label>No. telefon <input id="b_penjaga_telefon" maxlength="20" autocomplete="off"></label>
+        <label>Status asrama
+          <select id="e-asrama">
+            <option value="">Tidak tinggal di asrama</option>
+            <option value="YA">Tinggal di asrama</option>
+          </select>
+        </label>
+        <label>Status OKU
+          <select id="e-oku">
+            <option value="">Tiada Kad OKU</option>
+            <option value="YA">Ada Kad OKU (JKM)</option>
+          </select>
+        </label>
       </div>
-      <div class="row">
-        <label>Bilangan isi rumah <input id="b_bil_isi_rumah" type="number" min="1" max="30"></label>
-        <label>Pendapatan isi rumah (RM) <input id="b_pendapatan" type="number" min="0" step="0.01"></label>
+      <label>Catatan <textarea id="e-catatan" maxlength="500" rows="2"
+        placeholder="Contoh: disahkan dengan penjaga pada 20/10/2026"></textarea></label>
+      <div class="actions">
+        <button type="button" class="primary" id="btn-simpan">Simpan</button>
+        <button type="button" id="btn-sahkan">Tandakan disahkan</button>
+        <button type="button" id="btn-tutup">Tutup</button>
       </div>
-      <label>No. eKasih <input id="b_no_ekasih" maxlength="40" autocomplete="off"></label>
-      <button type="submit" class="primary">Hantar semula</button>
-      <div class="msg" id="msg-betul" hidden></div>
-    </form>
+      <div class="msg" id="msg-edit" hidden></div>
+      <h2 style="margin-top:20px;font-size:.92rem">Jejak audit</h2>
+      <ol class="trail" id="jejak"></ol>
+    </div>
   </section>
 </main>
 
-<footer class="site">
-  <a href="privasi.html">Notis privasi</a> &middot;
-  <a href="staf.html">Log masuk pegawai</a>
-</footer>
+<footer class="site"><a href="privasi.html">Notis privasi</a></footer>
 
 <script src="assets/config.js"></script>
 <script src="assets/api.js"></script>
 <script src="assets/ui.js"></script>
-<script src="assets/apply.js"></script>
+<script src="assets/app.js"></script>
 </body>
 </html>

@@ -2,23 +2,17 @@
  * Lapisan akses Google Sheets.
  *
  * Dua perkara yang Sheets tiada dan kena dibina sendiri di sini:
- *
- *   1. Transaksi. Dua permohonan yang masuk serentak boleh kedua-duanya
- *      lulus semakan pendua, atau menulis atas satu sama lain. Setiap
- *      operasi tulis MESTI dibalut dengan dgnKunci().
- *
- *   2. Row Level Security. Tiada konsep "baris ini hanya untuk sekolah X".
- *      Penapisan ikut sekolah dilakukan dalam kod sebelum data dipulangkan,
- *      bukan di klien.
+ *   1. Transaksi — dua tulisan serentak boleh merosakkan data.
+ *      Setiap operasi tulis dibalut dgnKunci().
+ *   2. Row Level Security — tiada konsep "baris ini hanya untuk kelas X".
+ *      Penapisan ikut kelas/sekolah dibuat dalam kod sebelum data keluar.
  */
 
 function _ss() {
   var id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
   if (id) return SpreadsheetApp.openById(id);
   var aktif = SpreadsheetApp.getActiveSpreadsheet();
-  if (!aktif) {
-    throw Ralat('SPREADSHEET_ID belum ditetapkan dalam Script Properties.');
-  }
+  if (!aktif) throw Ralat('SPREADSHEET_ID belum ditetapkan dalam Script Properties.');
   return aktif;
 }
 
@@ -28,11 +22,7 @@ function _helaian(nama) {
   return sh;
 }
 
-/**
- * Formula injection: nilai yang bermula =, +, -, @ ditafsir sebagai formula
- * oleh Sheets dan oleh Excel bila CSV dieksport. Prefix apostrof
- * meneutralkannya menjadi teks.
- */
+/** Formula injection: =, +, -, @ ditafsir sebagai formula oleh Sheets/Excel. */
 function bersihUntukSheet(nilai) {
   if (nilai === null || nilai === undefined) return '';
   if (typeof nilai === 'boolean' || typeof nilai === 'number') return nilai;
@@ -42,7 +32,6 @@ function bersihUntukSheet(nilai) {
   return s;
 }
 
-/** Buang aksara kawalan, pangkas, hadkan panjang. */
 function bersihTeks(nilai, panjangMaks) {
   if (nilai === null || nilai === undefined) return '';
   var s = String(nilai).replace(/[\x00-\x1F\x7F]/g, '').trim();
@@ -50,30 +39,28 @@ function bersihTeks(nilai, panjangMaks) {
   return s.length > had ? s.substring(0, had) : s;
 }
 
-/**
- * Semua tulisan melalui kunci skrip. Tanpa ini, dua pengguna serentak
- * boleh merosakkan data dan semakan pendua boleh dipintas.
- */
-function dgnKunci(fn) {
-  var kunci = LockService.getScriptLock();
-  if (!kunci.tryLock(20000)) {
-    throw Ralat('Sistem sedang sibuk. Cuba lagi sebentar.');
-  }
-  try {
-    return fn();
-  } finally {
-    kunci.releaseLock();
-  }
+/** Nombor dari sel Sheets yang mungkin teks, kosong, atau ada "RM". */
+function keNombor(nilai) {
+  if (nilai === null || nilai === undefined || nilai === '') return null;
+  if (typeof nilai === 'number') return isFinite(nilai) ? nilai : null;
+  var s = String(nilai).replace(/[^0-9.\-]/g, '');
+  if (s === '' || s === '-' || s === '.') return null;
+  var n = Number(s);
+  return isFinite(n) ? n : null;
 }
 
-/** Baca seluruh helaian sebagai array objek berkunci nama lajur. */
+function dgnKunci(fn) {
+  var kunci = LockService.getScriptLock();
+  if (!kunci.tryLock(25000)) throw Ralat('Sistem sedang sibuk. Cuba lagi sebentar.');
+  try { return fn(); } finally { kunci.releaseLock(); }
+}
+
 function bacaSemua(nama) {
   var sh = _helaian(nama);
   var baris = sh.getLastRow();
   if (baris < 2) return [];
-  var lajur = LAJUR[nama].length;
-  var nilai = sh.getRange(2, 1, baris - 1, lajur).getValues();
   var kepala = LAJUR[nama];
+  var nilai = sh.getRange(2, 1, baris - 1, kepala.length).getValues();
   return nilai.map(function (r, i) {
     var o = { _baris: i + 2 };
     for (var c = 0; c < kepala.length; c++) o[kepala[c]] = r[c];
@@ -81,10 +68,7 @@ function bacaSemua(nama) {
   });
 }
 
-/**
- * Cari satu baris mengikut nilai satu lajur. Guna TextFinder supaya tak
- * perlu baca 1,500 baris setiap kali hanya untuk cari satu permohonan.
- */
+/** Cari satu baris mengikut nilai lajur. TextFinder supaya tak baca 1,400 baris. */
 function cariBaris(nama, namaLajur, nilai) {
   var sh = _helaian(nama);
   var kepala = LAJUR[nama];
@@ -92,14 +76,9 @@ function cariBaris(nama, namaLajur, nilai) {
   if (idx < 0) throw Ralat('Lajur tidak dikenali: ' + namaLajur);
   var akhir = sh.getLastRow();
   if (akhir < 2) return null;
-
   var jumpa = sh.getRange(2, idx + 1, akhir - 1, 1)
-    .createTextFinder(String(nilai))
-    .matchEntireCell(true)
-    .matchCase(true)
-    .findNext();
+    .createTextFinder(String(nilai)).matchEntireCell(true).matchCase(true).findNext();
   if (!jumpa) return null;
-
   var baris = jumpa.getRow();
   var nilaiBaris = sh.getRange(baris, 1, 1, kepala.length).getValues()[0];
   var o = { _baris: baris };
@@ -109,13 +88,25 @@ function cariBaris(nama, namaLajur, nilai) {
 
 function tambahBaris(nama, objek) {
   var sh = _helaian(nama);
-  var kepala = LAJUR[nama];
-  var baris = kepala.map(function (k) { return bersihUntukSheet(objek[k]); });
-  sh.appendRow(baris);
+  sh.appendRow(LAJUR[nama].map(function (k) { return bersihUntukSheet(objek[k]); }));
   return sh.getLastRow();
 }
 
-/** Kemas kini hanya medan yang diberi, pada baris yang diberi. */
+/**
+ * Tambah banyak baris dalam SATU panggilan setValues.
+ * appendRow() satu-satu untuk 1,400 murid akan melebihi had masa Apps Script.
+ */
+function tambahBanyakBaris(nama, senarai) {
+  if (!senarai.length) return 0;
+  var sh = _helaian(nama);
+  var kepala = LAJUR[nama];
+  var matriks = senarai.map(function (o) {
+    return kepala.map(function (k) { return bersihUntukSheet(o[k]); });
+  });
+  sh.getRange(sh.getLastRow() + 1, 1, matriks.length, kepala.length).setValues(matriks);
+  return matriks.length;
+}
+
 function kemasBaris(nama, nomborBaris, tampalan) {
   var sh = _helaian(nama);
   var kepala = LAJUR[nama];
@@ -126,67 +117,72 @@ function kemasBaris(nama, nomborBaris, tampalan) {
   });
 }
 
+/** Tulis semula seluruh blok baris sekali gus — untuk import besar. */
+function tulisBaris(nama, nomborBaris, objek) {
+  var sh = _helaian(nama);
+  var kepala = LAJUR[nama];
+  sh.getRange(nomborBaris, 1, 1, kepala.length)
+    .setValues([kepala.map(function (k) { return bersihUntukSheet(objek[k]); })]);
+}
+
 function tetapan(kunci, lalai) {
   var semua = bacaSemua(HELAIAN.TETAPAN);
   for (var i = 0; i < semua.length; i++) {
-    if (String(semua[i].Kunci) === kunci) return semua[i].Nilai;
+    if (String(semua[i].Kunci) === kunci) {
+      var v = semua[i].Nilai;
+      return (v === '' || v === null || v === undefined) ? lalai : v;
+    }
   }
   return lalai;
 }
 
-function tetapanInt(kunci, lalai) {
-  var v = parseInt(tetapan(kunci, lalai), 10);
-  return isNaN(v) ? lalai : v;
+function tetapanNombor(kunci, lalai) {
+  var v = keNombor(tetapan(kunci, null));
+  return v === null ? lalai : v;
 }
 
-function kriteria(kunci) {
-  var semua = bacaSemua(HELAIAN.KRITERIA);
-  for (var i = 0; i < semua.length; i++) {
-    if (String(semua[i].Kunci) === kunci) {
-      var n = Number(semua[i].Nilai);
-      return isNaN(n) ? null : n;
-    }
-  }
-  return null;
+function tetapanYa(kunci) {
+  return String(tetapan(kunci, 'tidak')).trim().toLowerCase() === 'ya';
+}
+
+function sesiSemasa() {
+  var t = String(tetapan('sesi', '')).trim();
+  return t || Utilities.formatDate(new Date(), 'Asia/Kuala_Lumpur', 'yyyy');
 }
 
 /**
- * Jejak audit. Dalam versi Postgres sistem ini, trigger menghalang UPDATE
- * dan DELETE sepenuhnya. Sheets tiada mekanisme itu — kod ini hanya
- * menambah, dan pasang() melindungi helaian Audit, tetapi pemilik
- * spreadsheet tetap boleh mengeditnya secara manual. Ini kelemahan nyata
- * stack ini, bukan sesuatu yang boleh ditampung dengan kod.
+ * Jejak audit.
+ *
+ * Nota jujur: dalam pangkalan data sebenar, trigger boleh menghalang
+ * UPDATE dan DELETE pada jadual audit sepenuhnya. Sheets tiada mekanisme
+ * itu — kod hanya menambah dan pasang() meletakkan perlindungan amaran,
+ * tetapi pemilik spreadsheet sentiasa boleh mengeditnya dengan tangan.
  */
-function audit(noRujukan, tindakan, statusDari, statusKe, sebab, perubahan, pelaku) {
+function audit(idMurid, tindakan, sebab, perubahan, pelaku) {
   tambahBaris(HELAIAN.AUDIT, {
-    Masa:        new Date(),
-    NoRujukan:   noRujukan || '',
-    PelakuEmel:  (pelaku && pelaku.emel) || '',
-    PelakuLabel: (pelaku && pelaku.label) || 'pemohon',
-    Tindakan:    tindakan,
-    StatusDari:  statusDari || '',
-    StatusKe:    statusKe || '',
-    Sebab:       sebab ? bersihTeks(sebab) : '',
-    Perubahan:   perubahan ? JSON.stringify(perubahan).substring(0, 5000) : ''
+    Masa: new Date(),
+    IdMurid: idMurid || '',
+    PelakuEmel: (pelaku && pelaku.emel) || '',
+    PelakuLabel: (pelaku && pelaku.label) || 'sistem',
+    Tindakan: tindakan,
+    Sebab: sebab ? bersihTeks(sebab) : '',
+    Perubahan: perubahan ? JSON.stringify(perubahan).substring(0, 5000) : ''
   });
 }
 
-/** Had percubaan yang kekal dalam helaian — Cache boleh dikosongkan bila-bila. */
-function kiraCubaan(kunci, tempohMs) {
-  var sekarang = new Date().getTime();
-  var ada = cariBaris(HELAIAN.HAD, 'Kunci', kunci);
-  if (!ada) {
-    tambahBaris(HELAIAN.HAD, { Kunci: kunci, Bil: 1, ResetPada: new Date(sekarang + tempohMs) });
-    return 1;
-  }
-  var reset = new Date(ada.ResetPada).getTime();
-  var bil = (isNaN(reset) || reset < sekarang) ? 1 : Number(ada.Bil) + 1;
-  var resetBaru = (isNaN(reset) || reset < sekarang) ? new Date(sekarang + tempohMs) : ada.ResetPada;
-  kemasBaris(HELAIAN.HAD, ada._baris, { Bil: bil, ResetPada: resetBaru });
-  return bil;
+function auditBanyak(senarai) {
+  tambahBanyakBaris(HELAIAN.AUDIT, senarai.map(function (a) {
+    return {
+      Masa: new Date(), IdMurid: a.idMurid || '',
+      PelakuEmel: (a.pelaku && a.pelaku.emel) || '',
+      PelakuLabel: (a.pelaku && a.pelaku.label) || 'sistem',
+      Tindakan: a.tindakan, Sebab: a.sebab || '',
+      Perubahan: a.perubahan ? JSON.stringify(a.perubahan).substring(0, 5000) : ''
+    };
+  }));
 }
 
-function kosongkanCubaan(kunci) {
-  var ada = cariBaris(HELAIAN.HAD, 'Kunci', kunci);
-  if (ada) _helaian(HELAIAN.HAD).deleteRow(ada._baris);
+/** Kunci kelas: Tahun + NamaKelas. NamaKelas sahaja TIDAK unik. */
+function kelasId(tahun, namaKelas) {
+  return bersihTeks(tahun, 60).toUpperCase() + ' | ' + bersihTeks(namaKelas, 60).toUpperCase();
 }

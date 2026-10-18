@@ -1,9 +1,7 @@
 {
   "name": "sistem-rmt",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Sistem permohonan bantuan RMT — Google Sheets + Apps Script + GitHub Pages",
-  "scripts": {
-    "test": "node test/jalan.js"
-  }
+  "description": "Sistem pengurusan kelayakan RMT — import iDME, semakan guru kelas, papan pemuka penyelaras",
+  "scripts": { "test": "node test/jalan.js" }
 }

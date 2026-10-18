@@ -2,3 +2,10 @@ node_modules/
 *.log
 .DS_Store
 .clasp.json
+
+# Data murid sebenar TIDAK PERNAH masuk repo ini.
+# Repo ini public supaya GitHub Pages berfungsi pada pelan Free.
+*.xlsx
+*.xls
+*.csv
+data/

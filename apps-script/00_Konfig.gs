@@ -1,106 +1,144 @@
 /**
- * Konfigurasi dan pemalar.
+ * Sistem Pengurusan Kelayakan RMT
+ * Rujukan: Surat Pekeliling Kewangan Bil. 1 Tahun 2026 (KPM.100-1/4/2 Jld.6)
  *
- * Tiada rahsia dalam fail ini. Pepper kata laluan dan ID spreadsheet
- * disimpan dalam Script Properties, bukan di sini — fail .gs boleh
- * di-copy, di-share, dan masuk version control.
+ * Data murid diimport dari eksport iDME. Guru kelas membetulkan data
+ * kelasnya kalau perlu. Kelayakan dikira dari peraturan pekeliling.
+ * Penyelaras melihat keseluruhan dan menghasilkan senarai untuk JBPS.
+ *
+ * Tiada rahsia dalam fail ini. PEPPER dan SPREADSHEET_ID dalam Script
+ * Properties.
  */
 
 var HELAIAN = {
-  SEKOLAH:    'Sekolah',
-  STAF:       'Staf',
-  SESI_LOGIN: 'SesiLogin',
-  PERMOHONAN: 'Permohonan',
-  AUDIT:      'Audit',
-  TETAPAN:    'Tetapan',
-  KRITERIA:   'Kriteria',
-  HAD:        'Had'
+  SEKOLAH:       'Sekolah',
+  KELAS:         'Kelas',
+  STAF:          'Staf',
+  SESI_LOGIN:    'SesiLogin',
+  MURID:         'Murid',
+  AUDIT:         'Audit',
+  TETAPAN:       'Tetapan',
+  HAD:           'Had',
+  IMPORT_MENTAH: 'ImportMentah',
+  IMPORT_LOG:    'ImportLog'
 };
-
-/** Baris pertama setiap helaian. Urutan di sini = urutan lajur sebenar. */
-var LAJUR = {
-  Sekolah:    ['Kod', 'Nama', 'Aktif'],
-
-  Staf:       ['Emel', 'Nama', 'Peranan', 'SekolahKod', 'Aktif',
-               'Salt', 'KataLaluanHash', 'DiciptaPada'],
-
-  SesiLogin:  ['Token', 'Emel', 'Peranan', 'SekolahKod',
-               'DiciptaPada', 'TamatPada'],
-
-  Permohonan: ['NoRujukan', 'SekolahKod', 'Status', 'Sesi',
-               'PenjagaNama', 'PenjagaTelefon', 'PenjagaHubungan',
-               'MuridNama', 'MuridIC', 'MuridTahun', 'MuridKelas',
-               'BilIsiRumah', 'PendapatanIsiRumah', 'PendapatanPerKapita',
-               'EKasih', 'NoEKasih',
-               'KaliDipulangkan', 'CatatanPenyemak', 'CatatanPelulus',
-               'SebabTolak', 'PenyemakEmel', 'PelulusEmel',
-               'TarikhHantar', 'TarikhSemakan', 'TarikhKeputusan',
-               'TamatTempohBetul', 'PadamSelepas', 'Dianonimkan',
-               'DikemaskiniPada'],
-
-  Audit:      ['Masa', 'NoRujukan', 'PelakuEmel', 'PelakuLabel',
-               'Tindakan', 'StatusDari', 'StatusKe', 'Sebab', 'Perubahan'],
-
-  Tetapan:    ['Kunci', 'Nilai', 'Nota'],
-  Kriteria:   ['Kunci', 'Nilai', 'Nota', 'BerkuatkuasaDari'],
-
-  /** Kaunter had percubaan yang perlu kekal walaupun Cache dikosongkan. */
-  Had:        ['Kunci', 'Bil', 'ResetPada']
-};
-
-var STATUS = {
-  DIHANTAR:        'DIHANTAR',
-  DALAM_SEMAKAN:   'DALAM_SEMAKAN',
-  DIPULANGKAN:     'DIPULANGKAN',
-  DALAM_KELULUSAN: 'DALAM_KELULUSAN',
-  LULUS:           'LULUS',
-  TOLAK:           'TOLAK',
-  DITARIK_BALIK:   'DITARIK_BALIK',
-  GUGUR:           'GUGUR'
-};
-
-var PERANAN = { PENYEMAK: 'penyemak', PELULUS: 'pelulus', ADMIN: 'admin' };
-
-/** Tindakan semakan — digunakan untuk menguatkuasakan pengasingan tugas. */
-var TINDAKAN_SEMAKAN = ['MULA_SEMAKAN', 'KE_KELULUSAN', 'PULANGKAN', 'TOLAK_TERUS'];
 
 /**
- * Pusingan hashing kata laluan.
+ * Lajur Murid.
  *
- * Apps Script tiada bcrypt/Argon2. SHA-256 berulang ini memperlahankan
- * brute-force kira-kira HASH_PUSINGAN kali, tetapi MASIH lebih lemah dari
- * bcrypt kerana tiada memory-hardness. Jalankan ujiKelajuanHash() dalam
- * editor Apps Script untuk mengukur kelajuan sebenar pada projek anda,
- * kemudian naikkan nilai ini setinggi yang anda boleh terima (sasaran:
- * login ambil masa di bawah 2 saat).
+ * Eksport iDME ada 61 lajur. Kami import 17 sahaja — PDPA Prinsip
+ * Am/Minimization: jangan kumpul apa yang tidak diperlukan. Yang SENGAJA
+ * TIDAK diimport: alamat, poskod, bandar, daerah, no. akaun bank, nama
+ * bank, pekerjaan dan majikan penjaga, kaum, agama, jantina, tarikh lahir,
+ * no. telefon pejabat. Tiada satu pun diperlukan untuk menilai kelayakan
+ * RMT di bawah perenggan 4.1.
  */
-var HASH_PUSINGAN = 500;
+var LAJUR = {
+  Sekolah: ['Kod', 'Nama', 'Jenis', 'Negeri', 'Aktif'],
 
-var SESI_JAM            = 8;    // tempoh hayat token log masuk
-var HAD_LOGIN_CUBAAN    = 8;    // percubaan log masuk gagal
-var HAD_LOGIN_TEMPOH    = 300;  // ...dalam 5 minit
-var HAD_SEMAK_CUBAAN    = 5;    // percubaan semak status gagal
-var HAD_SEMAK_TEMPOH_MS = 15 * 60 * 1000;
-var PANJANG_TEKS_MAKS   = 1000;
+  // Identiti kelas sebenar = Tahun + NamaKelas. NamaKelas sahaja TIDAK unik:
+  // dalam eksport sebenar, "GIGIH" wujud merentas enam tahun berbeza.
+  Kelas: ['KelasId', 'Tahun', 'NamaKelas', 'SekolahKod',
+          'GuruEmel', 'GuruNamaImport', 'Sesi', 'Aktif'],
 
-/** Nilai lalai tetapan. pasang() menulis ini ke helaian Tetapan. */
-var TETAPAN_LALAI = [
-  ['had_pulangan',                 '3',  'Berapa kali satu permohonan boleh dipulangkan kepada pemohon'],
-  ['hari_tempoh_betul',            '14', 'Hari diberi kepada pemohon untuk betulkan sebelum GUGUR'],
-  ['sla_hari_semakan',             '7',  'Sasaran hari untuk penyemak — papar bendera lewat bila melebihi'],
-  ['sla_hari_kelulusan',           '5',  'Sasaran hari untuk pelulus'],
-  ['tahun_retention',              '3',  'Tempoh simpanan sebelum data peribadi dianonimkan'],
-  ['had_hantar_per_telefon_sehari','5',  'Perisai flood borang awam']
+  Staf: ['Emel', 'Nama', 'Peranan', 'SekolahKod', 'Aktif',
+         'Salt', 'KataLaluanHash', 'DiciptaPada'],
+
+  SesiLogin: ['Token', 'Emel', 'Peranan', 'SekolahKod', 'DiciptaPada', 'TamatPada'],
+
+  Murid: [
+    'IdMurid',              // kunci utama — unik, dan wujud untuk SEMUA murid
+    'Nama',
+    'NoPengenalan',         // boleh jadi sijil lahir / pasport / tiada dokumen
+    'JenisPengenalan',
+    'Tahun',
+    'NamaKelas',
+    'KelasId',
+    'SekolahKod',
+    'Warganegara',          // perenggan 4.1(a)
+    'StatusAsrama',         // perenggan 4.2 — penafian mutlak
+    'StatusOku',            // perenggan 4.1(f)
+    'PenjagaNama',          // konteks untuk guru kelas
+    'HubunganPenjaga',
+    'PenjagaTelefon',
+    'PendapatanPenjaga1',   // perenggan 3.7 — PIR
+    'PendapatanPenjaga2',
+    'Tanggungan',           // perenggan 3.6 — ibu bapa/penjaga + anak-anak
+    'Disahkan',             // guru kelas sudah semak?
+    'DisahkanOleh',
+    'DisahkanPada',
+    'MedanDiubah',          // senarai medan yang guru ubah, dipisah koma
+    'CatatanGuru',
+    'Sesi',                 // sesi/tahun import ini
+    'Aktif',                // false = tiada dalam import terkini (bertukar sekolah)
+    'DiimportPada',
+    'DikemaskiniPada'
+  ],
+
+  Audit: ['Masa', 'IdMurid', 'PelakuEmel', 'PelakuLabel', 'Tindakan',
+          'Sebab', 'Perubahan'],
+
+  Tetapan:   ['Kunci', 'Nilai', 'Nota'],
+  Had:       ['Kunci', 'Bil', 'ResetPada'],
+  ImportLog: ['Masa', 'PelakuEmel', 'BarisDibaca', 'Baharu', 'Dikemaskini',
+              'Dilangkau', 'Konflik', 'Amaran']
+};
+
+/** Medan yang guru kelas dibenarkan ubah. Selain ini, import yang menang. */
+var MEDAN_BOLEH_DIUBAH = [
+  'PendapatanPenjaga1', 'PendapatanPenjaga2', 'Tanggungan',
+  'Warganegara', 'StatusAsrama', 'StatusOku',
+  'PenjagaNama', 'HubunganPenjaga', 'PenjagaTelefon'
 ];
 
+var MEDAN_NOMBOR = ['PendapatanPenjaga1', 'PendapatanPenjaga2', 'Tanggungan'];
+
+var PERANAN = { GURU: 'guru', PENYELARAS: 'penyelaras', ADMIN: 'admin' };
+
+/** Tahun yang termasuk "Murid" di bawah perenggan 3.1 dan 4.1(b). */
+var TAHUN_RMT = ['TAHUN SATU', 'TAHUN DUA', 'TAHUN TIGA',
+                 'TAHUN EMPAT', 'TAHUN LIMA', 'TAHUN ENAM'];
+
+/** Jenis sekolah yang memberi kelayakan automatik — perenggan 4.1(d), (e). */
+var SEKOLAH_ORANG_ASLI = ['ORANG ASLI', 'PENAN'];
+var SEKOLAH_SBJK = 'SBJK';
+
+var HASH_PUSINGAN       = 500;
+var SESI_JAM            = 8;
+var HAD_LOGIN_CUBAAN    = 8;
+var HAD_LOGIN_TEMPOH    = 300;
+var PANJANG_TEKS_MAKS   = 1000;
+
 /**
- * Ralat yang SELAMAT dipapar kepada pengguna.
+ * Tetapan lalai.
  *
- * Ralat yang kita lemparkan sendiri ditanda di sini. Ralat JS yang tak
- * dijangka (TypeError, had kuota, dan seumpamanya) tidak ditanda, jadi
- * doPost memulangkan mesej generik dan menulis butirannya ke log sahaja —
- * raw error boleh membocorkan nama lajur dan struktur dalaman.
+ * pgk_miskin_tegar: PGK Makanan nasional, HIES 2024 (DOSM) = RM1,236.
+ * Perenggan 3.7 dan 4.1(c) merujuk "PGK Nasional SEMASA dalam kategori
+ * miskin tegar", jadi angka ini berubah. Sahkan dengan PPD/JPN sebelum
+ * menghantar senarai, dan kemas kini di helaian Tetapan — bukan dalam kod.
+ *
+ * kadar_sehari: perenggan 5.1 — RM4.00 untuk Sabah, Sarawak dan Labuan;
+ * RM3.50 untuk Semenanjung.
  */
+var TETAPAN_LALAI = [
+  ['pgk_miskin_tegar',      '1236',
+   'RM sebulan. PIR di bawah nilai ini = layak (perenggan 4.1c). ' +
+   'Sumber lalai: PGK Makanan nasional HIES 2024, DOSM. Sahkan dengan PPD/JPN.'],
+  ['kadar_sehari',          '4.00',
+   'Perenggan 5.1: RM4.00 Sabah/Sarawak/Labuan, RM3.50 Semenanjung'],
+  ['hari_persekolahan',     '190',
+   'Anggaran hari persekolahan setahun untuk kiraan peruntukan'],
+  ['kira_kelas_khas',       'tidak',
+   'Masukkan KELAS KHAS RENDAH dalam penilaian? Perenggan 4.1(f) memberi ' +
+   'laluan kepada MBPK pemegang Kad OKU tanpa ujian pendapatan. ' +
+   'Tukar kepada "ya" jika sekolah mahu menilai mereka.'],
+  ['kira_prasekolah',       'tidak',
+   'Perenggan 3.1 mentakrifkan Murid sebagai Tahun 1 hingga 6 sahaja'],
+  ['sesi',                  '',
+   'Sesi/tahun semasa. Kosong = guna tahun semasa secara automatik'],
+  ['had_percubaan_semak',   '5',  'Simpanan untuk kegunaan masa hadapan']
+];
+
 function Ralat(mesej) {
   var e = new Error(mesej);
   e.mesra = true;
