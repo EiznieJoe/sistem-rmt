@@ -6,208 +6,250 @@
 <title>Kelayakan RMT</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="color-scheme" content="light dark">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; form-action 'self'; base-uri 'none'; object-src 'none'">
 <link rel="stylesheet" href="assets/app.css">
 </head>
 <body>
 
-<header class="site">
-  <div class="topbar">
-    <div>
-      <h1>Pengurusan Kelayakan RMT</h1>
-      <p id="subtajuk">Rancangan Makanan Tambahan &middot; SPK Kewangan Bil. 1 Tahun 2026</p>
+<header class="appbar">
+  <div class="appbar-dalam">
+    <div class="jenama">
+      <b>Kelayakan RMT</b>
+      <span id="nama-sekolah">SK Rugading</span>
     </div>
-    <div class="actions actions-rapat">
-      <button type="button" id="btn-tukar-kl" hidden>Tukar kata laluan</button>
-      <button type="button" id="btn-keluar" hidden>Log keluar</button>
+    <div class="kanan">
+      <span class="siapa" id="siapa" hidden></span>
+      <button type="button" class="kecil" id="btn-tukar-kl" hidden>Kata laluan</button>
+      <button type="button" class="kecil" id="btn-keluar" hidden>Log keluar</button>
     </div>
   </div>
 </header>
 
 <main>
-  <!-- ===== LOG MASUK ===== -->
-  <form id="borang-masuk" class="card card-sempit" novalidate>
+
+  <!-- ============ LOG MASUK ============ -->
+  <form id="borang-masuk" class="kotak kotak-pad kotak-sempit" novalidate>
     <h2>Log masuk</h2>
-    <p class="hint">Akaun guru kelas dan penyelaras sahaja. Akaun didaftarkan oleh pentadbir sistem.</p>
-    <label>Emel <input id="emel" type="email" required autocomplete="username"></label>
-    <label>Kata laluan <input id="katalaluan" type="password" required autocomplete="current-password"></label>
-    <button type="submit" class="primary" id="btn-masuk">Log masuk</button>
-    <div class="msg" id="msg-masuk" hidden></div>
-    <p class="hint"><a href="#" id="pautan-lupa">Lupa kata laluan?</a></p>
+    <p class="nota">Akaun guru kelas dan penyelaras. Didaftarkan oleh pentadbir sistem.</p>
+    <div class="medan"><label for="emel">Emel</label>
+      <input id="emel" type="email" required autocomplete="username"></div>
+    <div class="medan"><label for="katalaluan">Kata laluan</label>
+      <input id="katalaluan" type="password" required autocomplete="current-password"></div>
+    <div class="butang"><button type="submit" class="utama" id="btn-masuk">Log masuk</button></div>
+    <div class="mesej" id="msg-masuk" hidden></div>
+    <p class="nota"><a href="#" id="pautan-lupa">Lupa kata laluan?</a></p>
   </form>
 
-  <!-- ===== LUPA KATA LALUAN ===== -->
-  <section id="pane-lupa" class="card card-sempit" hidden>
+  <!-- ============ LUPA KATA LALUAN ============ -->
+  <section id="pane-lupa" class="kotak kotak-pad kotak-sempit" hidden>
     <h2>Reset kata laluan</h2>
-
     <div id="lupa-langkah1">
-      <p class="hint">Masukkan emel akaun anda. Kami hantar kod 6 angka yang sah selama 30 minit.</p>
-      <label>Emel <input id="lupa-emel" type="email" autocomplete="username"></label>
-      <button type="button" class="primary" id="btn-minta-kod">Hantar kod</button>
+      <p class="nota">Kami hantar kod 6 angka ke emel anda. Sah selama 30 minit.</p>
+      <div class="medan"><label for="lupa-emel">Emel</label>
+        <input id="lupa-emel" type="email" autocomplete="username"></div>
+      <div class="butang"><button type="button" class="utama" id="btn-minta-kod">Hantar kod</button></div>
     </div>
-
     <div id="lupa-langkah2" hidden>
-      <p class="hint">Semak peti masuk dan folder spam, kemudian masukkan kod di bawah.</p>
-      <label>Kod 6 angka
-        <input id="lupa-kod" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
-      </label>
-      <label>Kata laluan baharu <span class="opt">(minimum 10 aksara)</span>
-        <input id="lupa-baru" type="password" autocomplete="new-password">
-      </label>
-      <button type="button" class="primary" id="btn-sah-kod">Tukar kata laluan</button>
-      <p class="hint"><a href="#" id="pautan-minta-semula">Hantar kod sekali lagi</a></p>
+      <p class="nota">Semak peti masuk dan folder spam.</p>
+      <div class="medan"><label for="lupa-kod">Kod 6 angka</label>
+        <input id="lupa-kod" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></div>
+      <div class="medan"><label for="lupa-baru">Kata laluan baharu <span class="opt">minimum 10 aksara</span></label>
+        <input id="lupa-baru" type="password" autocomplete="new-password"></div>
+      <div class="butang"><button type="button" class="utama" id="btn-sah-kod">Tukar kata laluan</button></div>
+      <p class="nota"><a href="#" id="pautan-minta-semula">Hantar kod sekali lagi</a></p>
     </div>
-
-    <div class="msg" id="msg-lupa" hidden></div>
-    <p class="hint"><a href="#" id="pautan-balik-masuk">Kembali ke log masuk</a></p>
+    <div class="mesej" id="msg-lupa" hidden></div>
+    <p class="nota"><a href="#" id="pautan-balik-masuk">Kembali ke log masuk</a></p>
   </section>
 
-  <!-- ===== TUKAR KATA LALUAN ===== -->
-  <section id="pane-tukar" class="card card-sempit" hidden>
+  <!-- ============ TUKAR KATA LALUAN ============ -->
+  <section id="pane-tukar" class="kotak kotak-pad kotak-sempit" hidden>
     <h2>Tukar kata laluan</h2>
-    <label>Kata laluan semasa <input id="tk-lama" type="password" autocomplete="current-password"></label>
-    <label>Kata laluan baharu <span class="opt">(minimum 10 aksara)</span>
-      <input id="tk-baru" type="password" autocomplete="new-password"></label>
-    <div class="actions">
-      <button type="button" class="primary" id="btn-simpan-kl">Simpan</button>
+    <div class="medan"><label for="tk-lama">Kata laluan semasa</label>
+      <input id="tk-lama" type="password" autocomplete="current-password"></div>
+    <div class="medan"><label for="tk-baru">Kata laluan baharu <span class="opt">minimum 10 aksara</span></label>
+      <input id="tk-baru" type="password" autocomplete="new-password"></div>
+    <div class="butang">
+      <button type="button" class="utama" id="btn-simpan-kl">Simpan</button>
       <button type="button" id="btn-batal-kl">Batal</button>
     </div>
-    <div class="msg" id="msg-tukar" hidden></div>
+    <div class="mesej" id="msg-tukar" hidden></div>
   </section>
 
-  <!-- ===== PENYELARAS ===== -->
-  <section id="pane-selaras" hidden>
-    <div class="card">
-      <h2>Ringkasan sekolah</h2>
-      <div class="hero">
-        <div class="nilai" id="hero-nilai">—</div>
-        <div class="label" id="hero-label">murid layak menerima RMT</div>
-        <p class="nota" id="hero-nota"></p>
+  <!-- ============ PENYELARAS ============ -->
+  <div id="pane-selaras" hidden>
+    <section class="seksyen">
+      <div class="kotak">
+        <div class="hero">
+          <div class="nilai" id="hero-nilai">&mdash;</div>
+          <div class="unit" id="hero-unit">murid layak menerima RMT</div>
+          <div class="kecil" id="hero-kecil"></div>
+          <div class="wang" id="hero-wang"></div>
+        </div>
+        <div class="jalur" id="jalur"></div>
+        <div class="kemajuan">
+          <div class="atas">
+            <span>Pengesahan guru kelas</span>
+            <span id="kemajuan-teks">&mdash;</span>
+          </div>
+          <div class="bar"><i id="kemajuan-bar"></i></div>
+        </div>
       </div>
-    </div>
+      <p class="nota" id="nota-formula"></p>
+    </section>
 
-    <div class="tiles" id="tiles"></div>
+    <section class="seksyen">
+      <h2>Kelas <span class="kira" id="kira-kelas"></span></h2>
+      <div class="kotak gulung">
+        <table>
+          <thead><tr>
+            <th>Kelas</th>
+            <th class="num">Murid</th>
+            <th class="num">Layak</th>
+            <th class="num">Perlu semak</th>
+            <th class="num">Disahkan</th>
+            <th class="lajur-sembunyi">Guru kelas</th>
+          </tr></thead>
+          <tbody id="jadual-kelas"></tbody>
+        </table>
+      </div>
+      <div class="mesej warn" id="amaran-guru" hidden></div>
+    </section>
 
-    <div class="card mt-md">
-      <h2>Pecahan ikut kelas</h2>
-      <div class="scroll"><table>
-        <thead><tr>
-          <th>Kelas</th><th>Guru kelas</th>
-          <th class="num">Murid</th><th class="num">Layak</th>
-          <th class="num">Tidak layak</th><th class="num">Perlu semak</th>
-          <th class="num">Belum disahkan</th>
-        </tr></thead>
-        <tbody id="jadual-kelas"></tbody>
-      </table></div>
-      <div class="msg warn" id="amaran-guru" hidden></div>
-    </div>
-
-    <div class="card">
-      <h2>Tetapan kelayakan</h2>
-      <p class="hint">Mengubah nilai di sini mengubah setiap jumlah di atas serta-merta, dan direkod dalam jejak audit.</p>
-      <div id="senarai-tetapan"></div>
-      <div class="msg" id="msg-tetapan" hidden></div>
-    </div>
-
-    <div class="card">
+    <section class="seksyen">
       <h2>Senarai murid</h2>
-      <div class="filters">
-        <label>Kelayakan
-          <select id="f-kelayakan">
-            <option value="">Semua</option>
-            <option value="LAYAK">Layak</option>
-            <option value="TIDAK_LAYAK">Tidak layak</option>
-            <option value="PERLU_SEMAK">Perlu semak</option>
-            <option value="LUAR_SKOP">Luar skop</option>
-          </select>
-        </label>
-        <label>Kelas <select id="f-kelas"><option value="">Semua</option></select></label>
-        <button type="button" id="btn-muat-senarai">Papar</button>
-        <button type="button" id="btn-csv">Eksport CSV untuk JBPS</button>
+      <div class="kotak">
+        <div class="tapis">
+          <div><label for="f-kelayakan">Kelayakan</label>
+            <select id="f-kelayakan">
+              <option value="">Semua</option>
+              <option value="LAYAK">Layak</option>
+              <option value="TIDAK_LAYAK">Tidak layak</option>
+              <option value="PERLU_SEMAK">Perlu semak</option>
+            </select></div>
+          <div><label for="f-kelas">Kelas</label>
+            <select id="f-kelas"><option value="">Semua</option></select></div>
+          <div class="butang">
+            <button type="button" class="utama" id="btn-muat-senarai">Papar</button>
+            <button type="button" id="btn-csv">Eksport CSV</button>
+          </div>
+        </div>
+        <div class="gulung">
+          <table>
+            <thead><tr>
+              <th>Nama</th><th class="lajur-sembunyi">Kelas</th>
+              <th class="num">PIR</th><th>Kelayakan</th>
+              <th class="lajur-sembunyi">Sebab</th>
+            </tr></thead>
+            <tbody id="jadual-murid"></tbody>
+          </table>
+        </div>
       </div>
-      <div class="msg" id="msg-senarai" hidden></div>
-      <div class="scroll"><table>
-        <thead><tr><th>Nama</th><th>Kelas</th><th class="num">PIR</th>
-          <th>Kelayakan</th><th>Laluan</th><th>Sebab</th></tr></thead>
-        <tbody id="jadual-murid"></tbody>
-      </table></div>
-    </div>
-  </section>
+      <div class="mesej" id="msg-senarai" hidden></div>
+    </section>
 
-  <!-- ===== GURU KELAS ===== -->
-  <section id="pane-guru" hidden>
-    <div class="card">
+    <section class="seksyen">
+      <h2>Tetapan kelayakan</h2>
+      <div class="kotak kotak-pad">
+        <p class="nota">Mengubah nilai di sini mengubah setiap jumlah di atas serta-merta, dan direkod dalam jejak audit.</p>
+        <div id="senarai-tetapan"></div>
+        <div class="mesej" id="msg-tetapan" hidden></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ GURU KELAS ============ -->
+  <div id="pane-guru" hidden>
+    <section class="seksyen">
       <h2>Kelas saya</h2>
-      <p class="hint">Data datang dari iDME. Betulkan hanya yang salah atau kosong — selebihnya guna seadanya.</p>
-      <div class="scroll"><table>
-        <thead><tr><th>Kelas</th><th class="num">Murid</th><th class="num">Layak</th>
-          <th class="num">Perlu semak</th><th class="num">Belum disahkan</th><th></th></tr></thead>
-        <tbody id="jadual-kelas-guru"></tbody>
-      </table></div>
-      <div class="msg" id="msg-guru" hidden></div>
-    </div>
-
-    <div class="card" id="kad-murid" hidden>
-      <div class="topbar">
-        <h2 id="tajuk-kelas" class="m0"></h2>
-        <button type="button" id="btn-sahkan-kelas">Sahkan semua yang jelas</button>
+      <div class="kotak gulung">
+        <table>
+          <thead><tr>
+            <th>Kelas</th><th class="num">Murid</th><th class="num">Layak</th>
+            <th class="num">Perlu semak</th><th class="num">Belum sah</th><th></th>
+          </tr></thead>
+          <tbody id="jadual-kelas-guru"></tbody>
+        </table>
       </div>
-      <div class="formula" id="formula-guru"></div>
-      <div class="msg" id="msg-kelas" hidden></div>
-      <div class="scroll"><table>
-        <thead><tr><th>Nama</th><th class="num">Penjaga 1</th><th class="num">Penjaga 2</th>
-          <th class="num">PIR</th><th>Kelayakan</th><th>Sah</th></tr></thead>
-        <tbody id="jadual-murid-guru"></tbody>
-      </table></div>
-    </div>
+      <div class="mesej" id="msg-guru" hidden></div>
+    </section>
 
-    <div class="card" id="kad-edit" hidden>
+    <section class="seksyen" id="kad-murid" hidden>
+      <h2><span id="tajuk-kelas"></span> <span class="kira" id="kira-murid"></span></h2>
+      <div class="kotak">
+        <div class="tapis">
+          <div class="butang">
+            <button type="button" id="btn-sahkan-kelas">Sahkan semua yang jelas</button>
+          </div>
+          <p class="nota" id="formula-guru"></p>
+        </div>
+        <div class="gulung">
+          <table>
+            <thead><tr>
+              <th>Nama</th>
+              <th class="num lajur-sembunyi">Penjaga 1</th>
+              <th class="num lajur-sembunyi">Penjaga 2</th>
+              <th class="num">PIR</th><th>Kelayakan</th><th>Sah</th>
+            </tr></thead>
+            <tbody id="jadual-murid-guru"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="mesej" id="msg-kelas" hidden></div>
+    </section>
+
+    <section class="seksyen" id="kad-edit" hidden>
       <h2 id="tajuk-edit"></h2>
-      <dl class="kv" id="kv-murid"></dl>
-      <div class="msg" id="msg-kelayakan" hidden></div>
-      <div class="row">
-        <label>Pendapatan penjaga 1 (RM) <input id="e-p1" type="number" min="0" step="0.01"></label>
-        <label>Pendapatan penjaga 2 (RM) <input id="e-p2" type="number" min="0" step="0.01"></label>
+      <div class="kotak kotak-pad">
+        <dl class="kv" id="kv-murid"></dl>
+        <div class="mesej" id="msg-kelayakan" hidden></div>
+        <div class="baris2">
+          <div class="medan"><label for="e-p1">Pendapatan penjaga 1 (RM)</label>
+            <input id="e-p1" type="number" min="0" step="0.01"></div>
+          <div class="medan"><label for="e-p2">Pendapatan penjaga 2 (RM)</label>
+            <input id="e-p2" type="number" min="0" step="0.01"></div>
+        </div>
+        <div class="baris2">
+          <div class="medan"><label for="e-tanggungan">Tanggungan</label>
+            <input id="e-tanggungan" type="number" min="1" max="30"></div>
+          <div class="medan"><label for="e-warganegara">Warganegara</label>
+            <select id="e-warganegara">
+              <option value="">Tiada perubahan</option>
+              <option>WARGANEGARA</option>
+              <option>BUKAN WARGANEGARA</option>
+            </select></div>
+        </div>
+        <div class="baris2">
+          <div class="medan"><label for="e-asrama">Status asrama</label>
+            <select id="e-asrama">
+              <option value="">Tidak tinggal di asrama</option>
+              <option value="YA">Tinggal di asrama</option>
+            </select></div>
+          <div class="medan"><label for="e-oku">Status OKU</label>
+            <select id="e-oku">
+              <option value="">Tiada Kad OKU</option>
+              <option value="YA">Ada Kad OKU (JKM)</option>
+            </select></div>
+        </div>
+        <div class="medan"><label for="e-catatan">Catatan</label>
+          <textarea id="e-catatan" maxlength="500" rows="2"
+            placeholder="Contoh: disahkan dengan penjaga pada 20/10/2026"></textarea></div>
+        <div class="butang">
+          <button type="button" class="utama" id="btn-simpan">Simpan</button>
+          <button type="button" id="btn-sahkan">Tandakan disahkan</button>
+          <button type="button" id="btn-tutup">Tutup</button>
+        </div>
+        <div class="mesej" id="msg-edit" hidden></div>
+        <h2 class="nota">Jejak audit</h2>
+        <ol class="jejak" id="jejak"></ol>
       </div>
-      <div class="row">
-        <label>Tanggungan <input id="e-tanggungan" type="number" min="1" max="30"></label>
-        <label>Warganegara
-          <select id="e-warganegara">
-            <option value="">(tiada perubahan)</option>
-            <option>WARGANEGARA</option>
-            <option>BUKAN WARGANEGARA</option>
-          </select>
-        </label>
-      </div>
-      <div class="row">
-        <label>Status asrama
-          <select id="e-asrama">
-            <option value="">Tidak tinggal di asrama</option>
-            <option value="YA">Tinggal di asrama</option>
-          </select>
-        </label>
-        <label>Status OKU
-          <select id="e-oku">
-            <option value="">Tiada Kad OKU</option>
-            <option value="YA">Ada Kad OKU (JKM)</option>
-          </select>
-        </label>
-      </div>
-      <label>Catatan <textarea id="e-catatan" maxlength="500" rows="2"
-        placeholder="Contoh: disahkan dengan penjaga pada 20/10/2026"></textarea></label>
-      <div class="actions">
-        <button type="button" class="primary" id="btn-simpan">Simpan</button>
-        <button type="button" id="btn-sahkan">Tandakan disahkan</button>
-        <button type="button" id="btn-tutup">Tutup</button>
-      </div>
-      <div class="msg" id="msg-edit" hidden></div>
-      <h2 class="h-sub">Jejak audit</h2>
-      <ol class="trail" id="jejak"></ol>
-    </div>
-  </section>
+    </section>
+  </div>
+
 </main>
 
-<footer class="site"><a href="privasi.html">Notis privasi</a></footer>
+<footer><a href="privasi.html">Notis privasi</a></footer>
 
 <script src="assets/config.js"></script>
 <script src="assets/api.js"></script>

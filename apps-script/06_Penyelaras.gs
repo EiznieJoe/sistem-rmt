@@ -19,8 +19,15 @@ function penyelarasRingkasan(token) {
   var kidSet = {};
   kelas.forEach(function (k) { kidSet[String(k.KelasId)] = true; });
 
+  /**
+   * Hanya tahun dalam skop dipaparkan. Prasekolah dan Kelas Khas Rendah
+   * tidak dinilai untuk RMT (perenggan 3.1), jadi memaparkannya hanya
+   * menambah bunyi pada setiap jumlah. Tetapan kira_kelas_khas dan
+   * kira_prasekolah mengawal ini — hidupkan dan ia muncul semula.
+   */
   var murid = bacaSemua(HELAIAN.MURID).filter(function (m) {
-    return m.Aktif !== false && kidSet[String(m.KelasId)];
+    return m.Aktif !== false && kidSet[String(m.KelasId)] &&
+           konteks.tahunSkop.indexOf(String(m.Tahun).trim().toUpperCase()) >= 0;
   });
 
   var ringkas = ringkasanKelayakan(murid, sekolah, konteks);
@@ -41,6 +48,9 @@ function penyelarasRingkasan(token) {
     });
   });
 
+  kelas = kelas.filter(function (k) {
+    return konteks.tahunSkop.indexOf(String(k.Tahun).trim().toUpperCase()) >= 0;
+  });
   kelas.forEach(function (k) {
     var b = ikutKelas[String(k.KelasId)];
     if (b) b.guru = String(k.GuruEmel || '') || ('(belum ditugaskan — iDME: ' +
@@ -89,6 +99,7 @@ function penyelarasSenarai(token, data) {
 
   var murid = bacaSemua(HELAIAN.MURID).filter(function (m) {
     if (m.Aktif === false || !kidSet[String(m.KelasId)]) return false;
+    if (konteks.tahunSkop.indexOf(String(m.Tahun).trim().toUpperCase()) < 0) return false;
     if (tapisKelas && String(m.KelasId).toUpperCase() !== tapisKelas) return false;
     return true;
   }).map(function (m) {
@@ -107,7 +118,7 @@ function penyelarasSenarai(token, data) {
 }
 
 /** Tetapan yang penyelaras boleh ubah sendiri, dengan jejak audit. */
-var TETAPAN_PENYELARAS = ['pgk_miskin_tegar', 'kadar_sehari',
+var TETAPAN_PENYELARAS = ['pgk_miskin_tegar', 'pgk_per_kapita', 'kadar_sehari',
                           'hari_persekolahan', 'kira_kelas_khas', 'kira_prasekolah'];
 
 function penyelarasTetapan(token) {
@@ -130,8 +141,10 @@ function penyelarasUbahTetapan(token, data) {
   }
   var nilai = bersihTeks(data.nilai, 60);
 
-  if (kunci === 'pgk_miskin_tegar' || kunci === 'kadar_sehari' ||
-      kunci === 'hari_persekolahan') {
+  if (kunci === 'pgk_per_kapita' && nilai === '') {
+    // Kosong dibenarkan — ia mematikan peringkat 2.
+  } else if (kunci === 'pgk_miskin_tegar' || kunci === 'pgk_per_kapita' ||
+      kunci === 'kadar_sehari' || kunci === 'hari_persekolahan') {
     var n = keNombor(nilai);
     if (n === null || n <= 0) throw Ralat('Nilai mesti nombor lebih besar dari sifar.');
     if (kunci === 'hari_persekolahan' && (n < 1 || n > 366)) {

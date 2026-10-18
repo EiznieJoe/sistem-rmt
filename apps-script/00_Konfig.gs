@@ -135,6 +135,10 @@ var TETAPAN_LALAI = [
   ['pgk_miskin_tegar',      '1236',
    'RM sebulan. PIR di bawah nilai ini = layak (perenggan 4.1c). ' +
    'Sumber lalai: PGK Makanan nasional HIES 2024, DOSM. Sahkan dengan PPD/JPN.'],
+  ['pgk_per_kapita',        '',
+   'RM sebulan. Peringkat 2: dipakai HANYA jika PIR melebihi PGK. ' +
+   'Per kapita = PIR / bilangan tanggungan (ibu bapa + anak-anak, perenggan 3.6). ' +
+   'Kosong = peringkat 2 dimatikan. SAHKAN HAD INI DENGAN PPD/JPN.'],
   ['kadar_sehari',          '4.00',
    'Perenggan 5.1: RM4.00 Sabah/Sarawak/Labuan, RM3.50 Semenanjung'],
   ['hari_persekolahan',     '190',

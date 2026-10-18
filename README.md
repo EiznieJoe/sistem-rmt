@@ -14,27 +14,40 @@ GitHub Pages (frontend). Kos sifar.
 
 ---
 
-## Kriteria BUKAN pendapatan per kapita
+## Ujian pendapatan ada DUA peringkat
 
-Ini perkara paling penting dalam repo ini.
+**Peringkat 1 — PIR penuh lawan PGK miskin tegar.**
+Perenggan 3.7 mentakrifkan PIR sebagai semua bentuk pendapatan ibu
+bapa/penjaga; perenggan 4.1(c) membandingkannya dengan PGK Nasional semasa
+dalam kategori miskin tegar. Lulus di sini = layak.
 
-Perenggan 3.7 mentakrifkan **PIR** sebagai "semua bentuk pendapatan ibu
-bapa/penjaga **di bawah PGK Nasional semasa dalam kategori miskin tegar**".
-Perenggan 4.1(c) membandingkan PIR itu **terus** dengan PGK. Tiada
-pembahagian dengan bilangan isi rumah di mana-mana.
+**Peringkat 2 — per kapita, HANYA jika peringkat 1 gagal.**
+Pendapatan dibahagi bilangan tanggungan. Perenggan 3.6 mentakrifkan
+Tanggungan sebagai "keluarga asas yang terdiri daripada **ibu bapa/penjaga
+dan anak-anak**", jadi medan `TANGGUNGAN` iDME **sudah termasuk ibu bapa** —
+jangan tambah satu atau dua lagi.
 
-Pada data sebenar satu sekolah dengan 1,307 murid Tahun 1–6:
+```
+PIR < PGK ?                         -> LAYAK (4.1c)
+  tidak -> had per kapita ada ?
+             tidak  -> TIDAK LAYAK
+             ada    -> tanggungan ada ?
+                         tidak -> PERLU SEMAK
+                         ada   -> PIR/tanggungan < had ? -> LAYAK (per kapita)
+                                                          -> TIDAK LAYAK
+```
 
-| Kaedah | Murid layak | Anggaran peruntukan |
-|---|---|---|
-| **PIR vs PGK RM1,236 (betul)** | **392** | RM297,920 |
-| Per kapita vs RM1,236 (salah) | 1,149 | ~RM873,000 |
+**Nota jujur tentang sumber.** Peringkat 2 tidak tertulis dalam SPK Bil. 1
+Tahun 2026 itu sendiri. Perenggan 18.1 SPK menyatakan ia hendaklah dibaca
+bersama *GP Pengurusan Program RMT*, dan peraturan per kapita difahami
+datang dari GP tersebut. Kalau PPD/JPN kemudian menyatakan sebaliknya,
+kosongkan tetapan `pgk_per_kapita` — peringkat 2 berhenti sepenuhnya tanpa
+sebarang perubahan kod.
 
-Beza 757 murid. Jangan tukar kepada per kapita tanpa arahan bertulis KPM.
-
-Berkaitan: perenggan 3.6 mentakrifkan **Tanggungan** sebagai "keluarga asas
-yang terdiri daripada **ibu bapa/penjaga dan anak-anak**" — jadi medan
-TANGGUNGAN dalam iDME sudah termasuk ibu bapa.
+Kesan peringkat 2 besar. Pada data sekolah ini, had per kapita RM550 boleh
+menambah ratusan murid berbanding peringkat 1 sahaja. **Sahkan had itu
+dengan PPD/JPN sebelum menghantar senarai.** Lalai: kosong (peringkat 2
+dimatikan).
 
 ## Peraturan yang dilaksanakan
 
@@ -43,7 +56,8 @@ TANGGUNGAN dalam iDME sudah termasuk ibu bapa.
 | 3.1, 4.1(b) | "Murid" = Tahun 1 hingga Tahun 6 | `LUAR_SKOP` untuk prasekolah dan kelas khas |
 | 4.2 | Murid tinggal di asrama **TIDAK LAYAK** | Penafian mutlak, mengatasi semua laluan |
 | 4.1(a) | Warganegara Malaysia | Bukan warganegara ditolak; belum disahkan → `PERLU_SEMAK` |
-| 4.1(c) | PIR di bawah PGK miskin tegar | Laluan utama |
+| 4.1(c) | PIR di bawah PGK miskin tegar | Peringkat 1 |
+| GP | Per kapita bila PIR melebihi PGK | Peringkat 2, boleh dimatikan |
 | 4.1(d) | Sekolah Orang Asli/Penan | Semua murid layak, tanpa ujian pendapatan |
 | 4.1(e) | Murid SBJK yang sudah ada dokumen | Laluan berasingan |
 | 4.1(f) | MBPK pemegang Kad OKU (JKM) | Layak tanpa ujian pendapatan |
@@ -247,6 +261,7 @@ Script untuk akaun biasa ialah 90 minit pelaksanaan sehari.
 lonjakan trafik pengguna mungkin nampak "Sistem sedang sibuk."
 
 **Prasekolah dan Kelas Khas Rendah** dikecualikan secara lalai mengikut
-perenggan 3.1. Tetapi perenggan 4.1(f) memberi laluan kepada MBPK pemegang
-Kad OKU tanpa ujian pendapatan — tetapan `kira_kelas_khas` boleh ditukar
-kepada `ya` kalau sekolah mahu menilai mereka.
+perenggan 3.1, dan **tidak dipaparkan langsung** dalam papan pemuka — bukan
+sekadar tidak dikira. Tetapi perenggan 4.1(f) memberi laluan kepada MBPK
+pemegang Kad OKU tanpa ujian pendapatan, jadi tetapan `kira_kelas_khas`
+boleh ditukar kepada `ya` dan mereka muncul semula.

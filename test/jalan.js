@@ -142,6 +142,59 @@ semak('PGK belum ditetapkan -> PERLU_SEMAK, bukan menganggap layak',
            jalankan("tetapPgk(1236,'ujian')");
            return r; })());
 
+console.log('\n== Peringkat 2: ujian per kapita ==');
+/* Had per kapita kosong secara lalai, jadi peringkat 2 dimatikan. */
+semak('peringkat 2 dimatikan bila had per kapita kosong',
+  nilai(100002).status === 'TIDAK_LAYAK' && nilai(100002).perKapita === null,
+  JSON.stringify(nilai(100002)));
+semak('formula menyatakan peringkat 2 dimatikan',
+  /dimatikan/.test(jalankan('ringkasanKelayakan([], {}, konteksKelayakan()).formula')));
+
+jalankan(`(function(){
+  var t = cariBaris(HELAIAN.TETAPAN,'Kunci','pgk_per_kapita');
+  if (t) kemasBaris(HELAIAN.TETAPAN, t._baris, {Nilai: 550});
+  else tambahBaris(HELAIAN.TETAPAN, {Kunci:'pgk_per_kapita', Nilai:550, Nota:'ujian'});
+})()`);
+
+/* 100002: PIR 1300 (>= PGK 1236), tanggungan 6 -> per kapita 216.67 < 550 */
+semak('PIR melebihi PGK tetapi per kapita di bawah had -> LAYAK',
+  nilai(100002).status === 'LAYAK' && nilai(100002).laluan === 'per kapita' &&
+  nilai(100002).perKapita === 216.67, JSON.stringify(nilai(100002)));
+semak('sebab menerangkan kedua-dua angka',
+  /1300/.test(nilai(100002).sebab) && /216\.67/.test(nilai(100002).sebab) &&
+  /6 tanggungan/.test(nilai(100002).sebab), nilai(100002).sebab);
+
+/* 100003: PIR 8000, tanggungan 4 -> per kapita 2000 >= 550 */
+semak('kedua-dua peringkat gagal -> TIDAK LAYAK',
+  nilai(100003).status === 'TIDAK_LAYAK' && nilai(100003).perKapita === 2000);
+
+/* 100011: PIR 4000, tanggungan 3 -> 1333.33 */
+semak('per kapita dikira dari tanggungan murid itu sendiri',
+  nilai(100011).perKapita === 1333.33, String(nilai(100011).perKapita));
+
+semak('peringkat 1 masih menang dahulu — per kapita tidak dirujuk langsung',
+  nilai(100001).laluan === '4.1(c)' && nilai(100001).perKapita === null);
+
+semak('tanggungan tiada DAN gagal peringkat 1 -> PERLU_SEMAK, bukan ditolak',
+  (() => { const b = jalankan("cariBaris(HELAIAN.MURID,'IdMurid','100011')._baris");
+           jalankan(`kemasBaris(HELAIAN.MURID, ${b}, {Tanggungan: ''})`);
+           const h = nilai(100011);
+           jalankan(`kemasBaris(HELAIAN.MURID, ${b}, {Tanggungan: 3})`);
+           return h.status === 'PERLU_SEMAK' && /tanggungan tiada/.test(h.sebab); })(),
+  'murid yang gagal ujian PIR tidak boleh ditolak senyap hanya kerana tanggungan kosong');
+
+semak('TANGGUNGAN tidak ditambah apa-apa — ia sudah termasuk ibu bapa (perenggan 3.6)',
+  nilai(100002).perKapita === Math.round((1300 / 6) * 100) / 100,
+  'bahagi 6, bukan 7 atau 8');
+
+/* Kembalikan keadaan asal supaya ujian seterusnya tidak terjejas */
+jalankan(`(function(){
+  var t = cariBaris(HELAIAN.TETAPAN,'Kunci','pgk_per_kapita');
+  kemasBaris(HELAIAN.TETAPAN, t._baris, {Nilai: ''});
+})()`);
+semak('had dikosongkan semula -> peringkat 2 mati semula',
+  nilai(100002).status === 'TIDAK_LAYAK');
+
 console.log('\n== Akaun dan skop kelas ==');
 jalankan(`
   daftarPegawai('guru1@sk.my','Cikgu Satu','guru','KataLaluanKuat1','XBA0000');
@@ -210,7 +263,12 @@ semak('sahkan kelas melangkau murid PERLU_SEMAK',
 
 console.log('\n== Papan pemuka penyelaras ==');
 r = panggil({ tindakan: 'ringkasan', token: TS });
-semak('penyelaras nampak semua kelas', r.ok && r.data.ikutKelas.length === 4);
+/* Data ujian ada 4 kelas; 2 dalam skop (Tahun 1 & 2), 2 luar skop
+   (prasekolah, kelas khas). Luar skop tidak dipaparkan langsung. */
+semak('kelas luar skop TIDAK dipaparkan kepada penyelaras',
+  r.ok && r.data.ikutKelas.length === 2 &&
+  r.data.ikutKelas.every(function (k) { return k.tahun.indexOf('TAHUN') === 0; }),
+  JSON.stringify(r.data && r.data.ikutKelas.map(function (k) { return k.kelasId; })));
 /* LAYAK yang dijangka, dikira tangan dari data sintetik:
      100001 PIR 800              -> 4.1(c)
      100004 PIR 650 (guru isi)   -> 4.1(c)
@@ -220,17 +278,29 @@ semak('penyelaras nampak semua kelas', r.ok && r.data.ikutKelas.length === 4);
    TIDAK_LAYAK 5, PERLU_SEMAK 1 (tanpa dokumen), LUAR_SKOP 2. Jumlah 13. */
 semak('jumlah layak dikira dari peraturan pekeliling',
   r.data.ringkasan.kira.LAYAK === 5 && r.data.ringkasan.kira.TIDAK_LAYAK === 5 &&
-  r.data.ringkasan.kira.PERLU_SEMAK === 1 && r.data.ringkasan.kira.LUAR_SKOP === 2,
+  r.data.ringkasan.kira.PERLU_SEMAK === 1,
   JSON.stringify(r.data.ringkasan.kira));
+semak('kiraan LUAR_SKOP kini sentiasa sifar — mereka ditapis lebih awal',
+  r.data.ringkasan.kira.LUAR_SKOP === 0);
+semak('murid luar skop tiada dalam senarai penuh',
+  (() => { const d = panggil({ tindakan: 'senaraiPenuh', token: TS, data: {} }).data;
+           return d.murid.length === 11 &&
+                  d.murid.every((m) => m.tahun.indexOf('TAHUN') === 0); })(),
+  'sepatutnya 11 murid Tahun 1-2 sahaja, bukan 13');
 semak('laluan kelayakan dipecahkan: empat melalui 4.1(c), satu melalui 4.1(f)',
   r.data.ringkasan.laluan['4.1(c)'] === 4 && r.data.ringkasan.laluan['4.1(f)'] === 1,
   JSON.stringify(r.data.ringkasan.laluan));
 semak('formula dinyatakan bersama setiap jumlah',
-  /Perenggan 4\.1\(c\)/.test(r.data.ringkasan.formula) &&
-  /Bukan pendapatan per kapita/.test(r.data.ringkasan.formula));
+  /Peringkat 1/.test(r.data.ringkasan.formula) &&
+  /PGK miskin tegar/.test(r.data.ringkasan.formula));
 semak('anggaran peruntukan = layak x kadar x hari',
   r.data.ringkasan.anggaranPeruntukan === 5 * 4.0 * 190, String(r.data.ringkasan.anggaranPeruntukan));
-semak('kelas tanpa guru disenaraikan untuk pentadbir', r.data.kelasTanpaGuru.length === 2);
+/* Kedua-dua kelas dalam skop sudah ada guru. Kelas luar skop yang tiada
+   guru bukan lagi amaran — ia memang tidak dipaparkan. */
+semak('amaran kelas tanpa guru hanya untuk kelas dalam skop',
+  r.data.kelasTanpaGuru.length === 0, JSON.stringify(r.data.kelasTanpaGuru));
+semak('kelasTanpaGuru() editor masih senaraikan SEMUA kelas untuk pentadbir',
+  jalankan('kelasTanpaGuru().length') === 2);
 semak('import terakhir dipaparkan', !!r.data.importAkhir && r.data.importAkhir.barisDibaca === 13);
 
 console.log('\n== Tetapan boleh ubah oleh penyelaras ==');

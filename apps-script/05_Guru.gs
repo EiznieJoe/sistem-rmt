@@ -44,6 +44,7 @@ function _paparMurid(m, sekolahIkutKod, konteks) {
     pendapatanPenjaga2: keNombor(m.PendapatanPenjaga2),
     tanggungan: keNombor(m.Tanggungan),
     pir: hasil.pir,
+    perKapita: hasil.perKapita,
     kelayakan: hasil.status,
     laluan: hasil.laluan,
     sebab: hasil.sebab,
@@ -69,7 +70,10 @@ function guruKelasSaya(token) {
   var sesi = perluAuth(token, [PERANAN.GURU, PERANAN.PENYELARAS]);
   var konteks = konteksKelayakan();
   var sekolah = _sekolahIkutKod();
-  var kelas = kelasDibenarkan(sesi);
+  /* Kelas luar skop RMT tidak dipaparkan — lihat nota dalam 06_Penyelaras.gs */
+  var kelas = kelasDibenarkan(sesi).filter(function (k) {
+    return konteks.tahunSkop.indexOf(String(k.Tahun).trim().toUpperCase()) >= 0;
+  });
   var kidSet = {};
   kelas.forEach(function (k) { kidSet[String(k.KelasId)] = true; });
 

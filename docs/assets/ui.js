@@ -47,7 +47,7 @@
     var anak = [];
     if (IKON_STATUS[status]) anak.push(ikon(IKON_STATUS[status]));
     anak.push(LABEL[status] || status);
-    return el("span", { class: "badge " + status }, anak);
+    return el("span", { class: "lencana " + status }, anak);
   }
 
   function tarikh(iso, denganMasa) {
@@ -69,7 +69,7 @@
     return isFinite(v) ? v.toLocaleString("en-MY") : "—";
   }
 
-  function papar(node, jenis, teks) { node.className = "msg " + jenis; node.textContent = teks; node.hidden = false; }
+  function papar(node, jenis, teks) { node.className = "mesej " + jenis; node.textContent = teks; node.hidden = false; }
   function sorok(node) { node.hidden = true; node.textContent = ""; }
 
   /* Formula injection: nilai bermula =, +, -, @ ditafsir sebagai formula

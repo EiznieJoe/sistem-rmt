@@ -96,7 +96,8 @@
     $("pane-lupa").hidden = true;
     $("btn-keluar").hidden = false;
     $("btn-tukar-kl").hidden = false;
-    $("subtajuk").textContent = d.nama + " — " + d.peranan;
+    $("siapa").textContent = d.nama + " \u00b7 " + d.peranan;
+    $("siapa").hidden = false;
     if (d.peranan === "penyelaras" || d.peranan === "admin") {
       $("pane-selaras").hidden = false;
       muatRingkasan();
@@ -108,56 +109,83 @@
 
   /* =================== PENYELARAS =================== */
   function muatRingkasan() {
+    var tb0 = $("jadual-kelas");
+    tb0.textContent = "";
+    tb0.appendChild(el("tr", null, [el("td", { colspan: "6" }, [
+      el("div", { class: "rangka" }, [el("i"), el("i"), el("i")])])]));
+
     RMT.panggil("ringkasan").then(function (d) {
       var r = d.ringkasan;
+      var dinilai = r.kira.LAYAK + r.kira.TIDAK_LAYAK + r.kira.PERLU_SEMAK;
 
-      // Hero: satu angka sahaja per paparan.
-      $("hero-nilai").textContent = UI.nombor(r.kira.LAYAK);
-      $("hero-label").textContent = "murid layak menerima RMT, daripada " +
-        UI.nombor(r.kira.LAYAK + r.kira.TIDAK_LAYAK + r.kira.PERLU_SEMAK) + " murid Tahun 1-6";
-      $("hero-nota").textContent = r.formula +
-        (r.pgk === null ? " PGK belum ditetapkan — tiada murid boleh ditanda layak." : "");
+      /* Satu angka hero sahaja — yang penyelaras datang untuk lihat. */
+      if (r.pgk === null) {
+        $("hero-nilai").textContent = "\u2014";
+        $("hero-unit").textContent = "PGK belum ditetapkan";
+        $("hero-kecil").textContent =
+          "Tiada murid boleh ditanda layak sehingga had PGK diisi di bawah.";
+        $("hero-wang").textContent = "";
+      } else {
+        $("hero-nilai").textContent = UI.nombor(r.kira.LAYAK);
+        $("hero-unit").textContent = "murid layak menerima RMT";
+        $("hero-kecil").textContent = "daripada " + UI.nombor(dinilai) +
+          " murid Tahun 1\u20136 \u00b7 had PGK " + UI.rm(r.pgk) +
+          (r.pgkPerKapita ? " \u00b7 per kapita " + UI.rm(r.pgkPerKapita) : "");
+        $("hero-wang").textContent = "";
+        $("hero-wang").appendChild(document.createTextNode("Anggaran peruntukan "));
+        $("hero-wang").appendChild(el("b", { text: UI.rm(r.anggaranPeruntukan) }));
+        $("hero-wang").appendChild(document.createTextNode(" \u00b7 " +
+          UI.rm(r.kadarSehari) + " sehari \u00d7 " + r.hariPersekolahan + " hari"));
+      }
 
-      var tiles = $("tiles");
-      tiles.textContent = "";
-      [["Tidak layak", UI.nombor(r.kira.TIDAK_LAYAK), "", null],
-       ["Perlu semak oleh guru kelas", UI.nombor(r.kira.PERLU_SEMAK), "warning", "warning"],
-       ["Belum disahkan guru", UI.nombor(r.belumDisahkan), "", null],
-       ["Anggaran peruntukan", UI.rm(r.anggaranPeruntukan), "good", "good"]
+      var jalur = $("jalur");
+      jalur.textContent = "";
+      [["Tidak layak", UI.nombor(r.kira.TIDAK_LAYAK), false],
+       ["Perlu semak", UI.nombor(r.kira.PERLU_SEMAK), r.kira.PERLU_SEMAK > 0],
+       ["Belum disahkan", UI.nombor(r.belumDisahkan), false]
       ].forEach(function (t) {
-        tiles.appendChild(el("div", { class: "tile " + (t[2] || "") }, [
-          el("div", { class: "label" }, (t[3] ? [UI.ikon(t[3])] : []).concat([t[0]])),
-          el("div", { class: "nilai", text: t[1] })
+        jalur.appendChild(el("div", null, [
+          el("div", { class: "label" }, (t[2] ? [UI.ikon("warning")] : []).concat([t[0]])),
+          el("div", { class: "angka" + (t[2] ? " amaran" : ""), text: t[1] })
         ]));
       });
-      tiles.appendChild(el("div", { class: "tile" }, [
-        el("div", { class: "label", text: "Kadar dan hari" }),
-        el("div", { class: "nilai", text: UI.rm(r.kadarSehari) }),
-        el("p", { class: "hint", text: "sehari × " + r.hariPersekolahan + " hari (perenggan 5.1)" })
-      ]));
+
+      /* Kemajuan pengesahan — kerja ini sebenarnya satu pungutan. */
+      var sah = dinilai - r.belumDisahkan;
+      var peratus = dinilai ? Math.round((sah / dinilai) * 100) : 0;
+      $("kemajuan-teks").textContent = "";
+      $("kemajuan-teks").appendChild(el("b",
+        { text: UI.nombor(sah) + " / " + UI.nombor(dinilai) }));
+      $("kemajuan-teks").appendChild(document.createTextNode(" \u00b7 " + peratus + "%"));
+      $("kemajuan-bar").style.width = peratus + "%";
+
+      $("nota-formula").textContent = r.formula;
 
       var tb = $("jadual-kelas");
       tb.textContent = "";
+      $("kira-kelas").textContent = d.ikutKelas.length + " kelas";
       d.ikutKelas.forEach(function (k) {
         tb.appendChild(el("tr", null, [
           el("td", { text: k.kelasId }),
-          el("td", { text: k.guru }),
           el("td", { class: "num", text: UI.nombor(k.jumlah) }),
           el("td", { class: "num", text: UI.nombor(k.LAYAK) }),
-          el("td", { class: "num", text: UI.nombor(k.TIDAK_LAYAK) }),
-          el("td", { class: "num", text: UI.nombor(k.PERLU_SEMAK) }),
-          el("td", { class: "num", text: UI.nombor(k.belumDisahkan) })
+          el("td", { class: "num", text: k.PERLU_SEMAK ? UI.nombor(k.PERLU_SEMAK) : "\u2014" }),
+          el("td", { class: "num",
+            text: UI.nombor(k.jumlah - k.belumDisahkan) + " / " + UI.nombor(k.jumlah) }),
+          el("td", { class: "lajur-sembunyi", text: k.guru })
         ]));
       });
+      if (!d.ikutKelas.length) {
+        tb.appendChild(el("tr", null, [el("td", { colspan: "6", class: "kosong",
+          text: "Tiada kelas lagi. Import data iDME dahulu." })]));
+      }
 
       var aw = $("amaran-guru");
       if (d.kelasTanpaGuru.length) {
         aw.hidden = false;
         aw.textContent = d.kelasTanpaGuru.length + " kelas belum ada akaun guru: " +
-          d.kelasTanpaGuru.map(function (k) {
-            return k.kelasId + (k.guruNamaImport ? " (iDME: " + k.guruNamaImport + ")" : "");
-          }).join("; ") +
-          " — pentadbir sistem perlu daftarkan dan tugaskan.";
+          d.kelasTanpaGuru.map(function (k) { return k.kelasId; }).join(", ") +
+          " \u2014 pentadbir sistem perlu daftarkan dan tugaskan.";
       } else { aw.hidden = true; }
 
       var fk = $("f-kelas");
@@ -168,7 +196,12 @@
       });
 
       muatTetapan();
-    }).catch(function (e) { papar($("msg-senarai"), "err", e.message); });
+    }).catch(function (e) {
+      var tb = $("jadual-kelas");
+      tb.textContent = "";
+      tb.appendChild(el("tr", null, [
+        el("td", { colspan: "6", class: "kosong", text: e.message })]));
+    });
   }
 
   function muatTetapan() {
@@ -187,10 +220,10 @@
             })
             .catch(function (e) { papar($("msg-tetapan"), "err", e.message); });
         };
-        wrap.appendChild(el("div", { class: "filters" }, [
+        wrap.appendChild(el("div", { class: "tapis" }, [
           el("label", null, [t.kunci, input]), btn
         ]));
-        if (t.nota) wrap.appendChild(el("p", { class: "hint", text: t.nota }));
+        if (t.nota) wrap.appendChild(el("p", { class: "nota", text: t.nota }));
       });
     });
   }
@@ -207,14 +240,22 @@
       tb.textContent = "";
       d.murid.slice(0, 500).forEach(function (m) {
         tb.appendChild(el("tr", null, [
-          el("td", { text: m.nama }),
-          el("td", { text: m.kelasId }),
-          el("td", { class: "num", text: m.pir === null ? "—" : UI.rm(m.pir) }),
-          el("td", null, [UI.lencana(m.kelayakan)]),
-          el("td", { text: m.laluan || "—" }),
-          el("td", { text: m.sebab })
+          el("td", null, [m.nama, el("span", { class: "sub", text: m.kelasId })]),
+          el("td", { class: "lajur-sembunyi", text: m.kelasId }),
+          el("td", { class: "num" }, [
+            m.pir === null ? "\u2014" : UI.rm(m.pir),
+            m.perKapita == null ? null
+              : el("span", { class: "sub", text: "pk " + UI.rm(m.perKapita) })
+          ]),
+          el("td", null, [UI.lencana(m.kelayakan),
+            m.laluan ? el("span", { class: "sub", text: m.laluan }) : null]),
+          el("td", { class: "lajur-sembunyi", text: m.sebab })
         ]));
       });
+      if (!d.murid.length) {
+        tb.appendChild(el("tr", null, [el("td", { colspan: "5", class: "kosong",
+          text: "Tiada murid padan dengan tapisan ini." })]));
+      }
       if (d.murid.length > 500) {
         papar($("msg-senarai"), "warn", d.jumlah + " murid padan; 500 pertama dipapar. " +
           "Guna eksport CSV untuk senarai penuh.");
@@ -225,12 +266,12 @@
   $("btn-csv").onclick = function () {
     if (!senaraiSemasa.length) return papar($("msg-senarai"), "err", "Papar senarai dahulu.");
     var kepala = ["Nama", "No. Pengenalan", "Jenis Pengenalan", "Tahun", "Kelas",
-      "Pendapatan Penjaga 1", "Pendapatan Penjaga 2", "PIR", "Tanggungan",
+      "Pendapatan Penjaga 1", "Pendapatan Penjaga 2", "PIR", "Tanggungan", "Per kapita",
       "Kelayakan", "Laluan (SPK 1/2026)", "Sebab", "Disahkan oleh"];
     UI.muatTurunCsv("senarai-rmt-" + new Date().toISOString().slice(0, 10) + ".csv",
       [kepala].concat(senaraiSemasa.map(function (m) {
         return [m.nama, m.noPengenalan, m.jenisPengenalan, m.tahun, m.namaKelas,
-          m.pendapatanPenjaga1, m.pendapatanPenjaga2, m.pir, m.tanggungan,
+          m.pendapatanPenjaga1, m.pendapatanPenjaga2, m.pir, m.tanggungan, m.perKapita,
           UI.LABEL[m.kelayakan] || m.kelayakan, m.laluan, m.sebab, m.disahkanOleh];
       })));
     papar($("msg-senarai"), "warn",
@@ -274,6 +315,7 @@
       muridKelas = d.murid;
       sorok($("msg-kelas"));
       $("tajuk-kelas").textContent = d.kelas.kelasId;
+      $("kira-murid").textContent = d.murid.length + " murid";
       $("formula-guru").textContent = d.konteks.formula;
       lukisMurid();
     }).catch(function (e) { papar($("msg-kelas"), "err", e.message); });
@@ -283,12 +325,18 @@
     var tb = $("jadual-murid-guru");
     tb.textContent = "";
     muridKelas.forEach(function (m) {
-      var tr = el("tr", { class: "boleh" }, [
+      var tr = el("tr", { class: "klik" }, [
         el("td", null, [m.nama, m.medanDiubah.length
           ? el("div", { class: "diubah", text: "diubah: " + m.medanDiubah.join(", ") }) : null]),
-        el("td", { class: "num", text: m.pendapatanPenjaga1 === null ? "—" : UI.rm(m.pendapatanPenjaga1) }),
-        el("td", { class: "num", text: m.pendapatanPenjaga2 === null ? "—" : UI.rm(m.pendapatanPenjaga2) }),
-        el("td", { class: "num", text: m.pir === null ? "—" : UI.rm(m.pir) }),
+        el("td", { class: "num lajur-sembunyi",
+          text: m.pendapatanPenjaga1 === null ? "\u2014" : UI.rm(m.pendapatanPenjaga1) }),
+        el("td", { class: "num lajur-sembunyi",
+          text: m.pendapatanPenjaga2 === null ? "\u2014" : UI.rm(m.pendapatanPenjaga2) }),
+        el("td", { class: "num" }, [
+          m.pir === null ? "\u2014" : UI.rm(m.pir),
+          m.perKapita == null ? null
+            : el("span", { class: "sub", text: "pk " + UI.rm(m.perKapita) })
+        ]),
         el("td", null, [UI.lencana(m.kelayakan)]),
         el("td", { text: m.disahkan ? "Ya" : "Belum" })
       ]);
@@ -319,7 +367,11 @@
      ["Kelas", m.kelasId],
      ["Penjaga", m.penjagaNama + (m.hubunganPenjaga ? " (" + m.hubunganPenjaga + ")" : "")],
      ["Telefon", m.penjagaTelefon || "—"],
-     ["PIR semasa", m.pir === null ? "—" : UI.rm(m.pir)],
+     ["PIR semasa", m.pir === null ? "\u2014" : UI.rm(m.pir)],
+     ["Tanggungan", m.tanggungan == null ? "\u2014" : String(m.tanggungan)],
+     ["Per kapita", m.perKapita == null
+        ? "\u2014 (tidak dirujuk \u2014 PIR sudah lulus, atau had belum ditetapkan)"
+        : UI.rm(m.perKapita)],
      ["Disahkan oleh", m.disahkanOleh || "—"]
     ].forEach(function (p) {
       kv.appendChild(el("dt", { text: p[0] }));

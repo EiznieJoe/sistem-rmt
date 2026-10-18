@@ -151,6 +151,10 @@ var TETAPAN_LALAI = [
   ['pgk_miskin_tegar',      '1236',
    'RM sebulan. PIR di bawah nilai ini = layak (perenggan 4.1c). ' +
    'Sumber lalai: PGK Makanan nasional HIES 2024, DOSM. Sahkan dengan PPD/JPN.'],
+  ['pgk_per_kapita',        '',
+   'RM sebulan. Peringkat 2: dipakai HANYA jika PIR melebihi PGK. ' +
+   'Per kapita = PIR / bilangan tanggungan (ibu bapa + anak-anak, perenggan 3.6). ' +
+   'Kosong = peringkat 2 dimatikan. SAHKAN HAD INI DENGAN PPD/JPN.'],
   ['kadar_sehari',          '4.00',
    'Perenggan 5.1: RM4.00 Sabah/Sarawak/Labuan, RM3.50 Semenanjung'],
   ['hari_persekolahan',     '190',
@@ -632,15 +636,29 @@ function kelasDibenarkan(sesi) {
  * Sumber tunggal: Surat Pekeliling Kewangan Bil. 1 Tahun 2026, perenggan
  * 3.1, 3.6, 3.7, 4.1 dan 4.2.
  *
- * PENTING — kriteria ini BUKAN pendapatan per kapita.
- * Perenggan 3.7 mentakrifkan PIR sebagai "semua bentuk pendapatan ibu
- * bapa/penjaga di bawah PGK Nasional semasa dalam kategori miskin tegar".
- * Perenggan 4.1(c) membandingkan PIR itu terus dengan PGK. Tiada
- * pembahagian dengan bilangan isi rumah di mana-mana.
+ * UJIAN PENDAPATAN ADA DUA PERINGKAT.
  *
- * Pada data sebenar, beza antara dua tafsiran ini ialah 756 murid dari
- * 1,307 — lebih kurang RM575,000 peruntukan. Jangan tukar kepada per
- * kapita tanpa arahan bertulis dari KPM.
+ * Peringkat 1 — PIR penuh lawan PGK miskin tegar.
+ *   Perenggan 3.7 mentakrifkan PIR sebagai semua bentuk pendapatan ibu
+ *   bapa/penjaga; perenggan 4.1(c) membandingkannya dengan PGK Nasional
+ *   semasa dalam kategori miskin tegar. Lulus di sini = layak.
+ *
+ * Peringkat 2 — per kapita, HANYA jika peringkat 1 gagal.
+ *   Pendapatan dibahagi bilangan tanggungan. Perenggan 3.6 mentakrifkan
+ *   Tanggungan sebagai "keluarga asas yang terdiri daripada ibu
+ *   bapa/penjaga dan anak-anak", jadi medan TANGGUNGAN iDME sudah
+ *   termasuk ibu bapa — JANGAN tambah satu atau dua lagi.
+ *
+ * Nota jujur tentang sumber: peringkat 2 TIDAK tertulis dalam SPK Bil. 1
+ * Tahun 2026. Perenggan 18.1 SPK itu menyatakan ia hendaklah dibaca
+ * bersama GP Pengurusan Program RMT, dan peraturan per kapita difahami
+ * datang dari GP tersebut. Kalau PPD/JPN kemudian menyatakan sebaliknya,
+ * kosongkan tetapan pgk_per_kapita dan peringkat 2 akan berhenti
+ * sepenuhnya tanpa sebarang perubahan kod.
+ *
+ * Kesan peringkat 2 besar: pada data sekolah ini ia boleh menambah
+ * ratusan murid. Had per kapita WAJIB disahkan dengan PPD/JPN sebelum
+ * senarai dihantar.
  *
  * Kelayakan TIDAK disimpan dalam helaian. Ia dikira setiap kali dari
  * data semasa, supaya menukar PGK dalam Tetapan terus mengemas kini
@@ -681,19 +699,19 @@ function nilaiKelayakan(m, sekolah, konteks) {
   // --- Perenggan 3.1 + 4.1(b): "Murid" bermaksud Tahun 1 hingga Tahun 6
   if (konteks.tahunSkop.indexOf(String(m.Tahun).trim().toUpperCase()) < 0) {
     return { status: STATUS_KELAYAKAN.LUAR_SKOP, laluan: '',
-             sebab: 'Bukan Tahun 1-6 (perenggan 3.1)', pir: null };
+             sebab: 'Bukan Tahun 1-6 (perenggan 3.1)', pir: null, perKapita: null };
   }
 
   // --- Perenggan 4.2: penafian mutlak, mengatasi semua laluan lain
   if (_ya(m.StatusAsrama)) {
     return { status: STATUS_KELAYAKAN.TIDAK_LAYAK, laluan: '',
-             sebab: 'Tinggal di asrama SK/SBK (perenggan 4.2)', pir: null };
+             sebab: 'Tinggal di asrama SK/SBK (perenggan 4.2)', pir: null, perKapita: null };
   }
 
   // --- Perenggan 4.1(d): semua murid Sekolah Orang Asli/Penan layak
   if (SEKOLAH_ORANG_ASLI.indexOf(jenisSekolah) >= 0) {
     return { status: STATUS_KELAYAKAN.LAYAK, laluan: '4.1(d)',
-             sebab: 'Murid Sekolah Orang Asli/Penan', pir: null };
+             sebab: 'Murid Sekolah Orang Asli/Penan', pir: null, perKapita: null };
   }
 
   // --- Perenggan 4.1(a): warganegara, berdasarkan dokumen pengenalan
@@ -703,23 +721,23 @@ function nilaiKelayakan(m, sekolah, konteks) {
 
   if (wn === 'BUKAN WARGANEGARA') {
     return { status: STATUS_KELAYAKAN.TIDAK_LAYAK, laluan: '',
-             sebab: 'Bukan warganegara (perenggan 4.1a)', pir: null };
+             sebab: 'Bukan warganegara (perenggan 4.1a)', pir: null, perKapita: null };
   }
 
   // --- Perenggan 4.1(e): murid SBJK yang TELAH memiliki dokumen pengenalan
   if (jenisSekolah === SEKOLAH_SBJK) {
     if (tiadaDokumen) {
       return { status: STATUS_KELAYAKAN.PERLU_SEMAK, laluan: '',
-               sebab: 'Murid SBJK belum ada dokumen pengenalan (perenggan 4.1e)', pir: null };
+               sebab: 'Murid SBJK belum ada dokumen pengenalan (perenggan 4.1e)', pir: null, perKapita: null };
     }
     return { status: STATUS_KELAYAKAN.LAYAK, laluan: '4.1(e)',
-             sebab: 'Murid SBJK berdokumen', pir: null };
+             sebab: 'Murid SBJK berdokumen', pir: null, perKapita: null };
   }
 
   // --- Perenggan 4.1(f): MBPK pemegang Kad OKU, tanpa ujian pendapatan
   if (_ya(m.StatusOku)) {
     return { status: STATUS_KELAYAKAN.LAYAK, laluan: '4.1(f)',
-             sebab: 'MBPK pemegang Kad OKU', pir: null };
+             sebab: 'MBPK pemegang Kad OKU', pir: null, perKapita: null };
   }
 
   // Warganegara belum disahkan: jangan tolak secara senyap — serahkan
@@ -727,7 +745,7 @@ function nilaiKelayakan(m, sekolah, konteks) {
   if (wn !== 'WARGANEGARA' || tiadaDokumen) {
     return { status: STATUS_KELAYAKAN.PERLU_SEMAK, laluan: '',
              sebab: 'Status warganegara/dokumen pengenalan belum disahkan (perenggan 4.1a)',
-             pir: null };
+             pir: null, perKapita: null };
   }
 
   // --- Perenggan 3.7 + 4.1(c): PIR dibanding PGK miskin tegar
@@ -735,28 +753,62 @@ function nilaiKelayakan(m, sekolah, konteks) {
   var p2 = keNombor(m.PendapatanPenjaga2);
   if (p1 === null && p2 === null) {
     return { status: STATUS_KELAYAKAN.PERLU_SEMAK, laluan: '',
-             sebab: 'Tiada data pendapatan penjaga', pir: null };
+             sebab: 'Tiada data pendapatan penjaga', pir: null, perKapita: null };
   }
   if (pgk === null) {
     return { status: STATUS_KELAYAKAN.PERLU_SEMAK, laluan: '',
-             sebab: 'PGK miskin tegar belum ditetapkan dalam Tetapan', pir: (p1 || 0) + (p2 || 0) };
+             sebab: 'PGK miskin tegar belum ditetapkan dalam Tetapan',
+             pir: (p1 || 0) + (p2 || 0), perKapita: null };
   }
 
   var pir = (p1 || 0) + (p2 || 0);
+
+  // --- Peringkat 1: PIR penuh lawan PGK miskin tegar
   if (pir < pgk) {
     return { status: STATUS_KELAYAKAN.LAYAK, laluan: '4.1(c)',
              sebab: 'PIR RM' + pir.toFixed(2) + ' di bawah PGK miskin tegar RM' + pgk.toFixed(2),
-             pir: pir };
+             pir: pir, perKapita: null };
   }
+
+  // --- Peringkat 2: per kapita, hanya bila peringkat 1 gagal
+  var hadKapita = konteks.pgkPerKapita;
+  if (hadKapita === null) {
+    // Peringkat 2 dimatikan — tiada had ditetapkan.
+    return { status: STATUS_KELAYAKAN.TIDAK_LAYAK, laluan: '',
+             sebab: 'PIR RM' + pir.toFixed(2) + ' mencapai atau melebihi PGK RM' + pgk.toFixed(2),
+             pir: pir, perKapita: null };
+  }
+
+  var tanggungan = keNombor(m.Tanggungan);
+  if (tanggungan === null || tanggungan <= 0) {
+    // Tak boleh dikira, dan murid ini gagal peringkat 1 — jangan tolak
+    // secara senyap. Guru kelas perlu mengisi bilangan tanggungan.
+    return { status: STATUS_KELAYAKAN.PERLU_SEMAK, laluan: '',
+             sebab: 'PIR RM' + pir.toFixed(2) + ' melebihi PGK, dan bilangan ' +
+                    'tanggungan tiada — per kapita tidak dapat dikira',
+             pir: pir, perKapita: null };
+  }
+
+  var perKapita = Math.round((pir / tanggungan) * 100) / 100;
+  if (perKapita < hadKapita) {
+    return { status: STATUS_KELAYAKAN.LAYAK, laluan: 'per kapita',
+             sebab: 'PIR RM' + pir.toFixed(2) + ' melebihi PGK, tetapi per kapita RM' +
+                    perKapita.toFixed(2) + ' (bahagi ' + tanggungan + ' tanggungan) ' +
+                    'di bawah had RM' + hadKapita.toFixed(2),
+             pir: pir, perKapita: perKapita };
+  }
+
   return { status: STATUS_KELAYAKAN.TIDAK_LAYAK, laluan: '',
-           sebab: 'PIR RM' + pir.toFixed(2) + ' mencapai atau melebihi PGK RM' + pgk.toFixed(2),
-           pir: pir };
+           sebab: 'PIR RM' + pir.toFixed(2) + ' dan per kapita RM' + perKapita.toFixed(2) +
+                  ' kedua-duanya mencapai atau melebihi had',
+           pir: pir, perKapita: perKapita };
 }
 
 /** Baca tetapan sekali untuk menilai banyak murid. */
 function konteksKelayakan() {
   return {
     pgk: tetapanNombor('pgk_miskin_tegar', null),
+    pgkPerKapita: tetapanNombor('pgk_per_kapita', null),
     tahunSkop: tahunDalamSkop().map(function (t) { return t.toUpperCase(); }),
     kadarSehari: tetapanNombor('kadar_sehari', 4.0),
     hariPersekolahan: tetapanNombor('hari_persekolahan', 190)
@@ -788,9 +840,13 @@ function ringkasanKelayakan(senaraiMurid, sekolahIkutKod, konteks) {
     anggaranPeruntukan: Math.round(anggaran * 100) / 100,
     // Dipapar bersama setiap jumlah supaya tiada siapa tertanya-tanya
     // angka mana yang menghasilkannya.
-    formula: 'Perenggan 4.1(c): PIR (pendapatan penjaga 1 + 2) dibanding ' +
-             'PGK miskin tegar RM' + (konteks.pgk === null ? '—' : konteks.pgk.toFixed(2)) +
-             '. Bukan pendapatan per kapita.'
+    pgkPerKapita: konteks.pgkPerKapita,
+    formula: 'Peringkat 1: PIR (penjaga 1 + 2) dibanding PGK miskin tegar RM' +
+             (konteks.pgk === null ? '—' : konteks.pgk.toFixed(2)) +
+             (konteks.pgkPerKapita === null
+               ? '. Peringkat 2 (per kapita) dimatikan — had belum ditetapkan.'
+               : '. Peringkat 2: jika PIR melebihi PGK, per kapita (PIR dibahagi ' +
+                 'bilangan tanggungan) dibanding RM' + konteks.pgkPerKapita.toFixed(2) + '.')
   };
 }
 
@@ -1224,6 +1280,7 @@ function _paparMurid(m, sekolahIkutKod, konteks) {
     pendapatanPenjaga2: keNombor(m.PendapatanPenjaga2),
     tanggungan: keNombor(m.Tanggungan),
     pir: hasil.pir,
+    perKapita: hasil.perKapita,
     kelayakan: hasil.status,
     laluan: hasil.laluan,
     sebab: hasil.sebab,
@@ -1249,7 +1306,10 @@ function guruKelasSaya(token) {
   var sesi = perluAuth(token, [PERANAN.GURU, PERANAN.PENYELARAS]);
   var konteks = konteksKelayakan();
   var sekolah = _sekolahIkutKod();
-  var kelas = kelasDibenarkan(sesi);
+  /* Kelas luar skop RMT tidak dipaparkan — lihat nota dalam 06_Penyelaras.gs */
+  var kelas = kelasDibenarkan(sesi).filter(function (k) {
+    return konteks.tahunSkop.indexOf(String(k.Tahun).trim().toUpperCase()) >= 0;
+  });
   var kidSet = {};
   kelas.forEach(function (k) { kidSet[String(k.KelasId)] = true; });
 
@@ -1451,8 +1511,15 @@ function penyelarasRingkasan(token) {
   var kidSet = {};
   kelas.forEach(function (k) { kidSet[String(k.KelasId)] = true; });
 
+  /**
+   * Hanya tahun dalam skop dipaparkan. Prasekolah dan Kelas Khas Rendah
+   * tidak dinilai untuk RMT (perenggan 3.1), jadi memaparkannya hanya
+   * menambah bunyi pada setiap jumlah. Tetapan kira_kelas_khas dan
+   * kira_prasekolah mengawal ini — hidupkan dan ia muncul semula.
+   */
   var murid = bacaSemua(HELAIAN.MURID).filter(function (m) {
-    return m.Aktif !== false && kidSet[String(m.KelasId)];
+    return m.Aktif !== false && kidSet[String(m.KelasId)] &&
+           konteks.tahunSkop.indexOf(String(m.Tahun).trim().toUpperCase()) >= 0;
   });
 
   var ringkas = ringkasanKelayakan(murid, sekolah, konteks);
@@ -1473,6 +1540,9 @@ function penyelarasRingkasan(token) {
     });
   });
 
+  kelas = kelas.filter(function (k) {
+    return konteks.tahunSkop.indexOf(String(k.Tahun).trim().toUpperCase()) >= 0;
+  });
   kelas.forEach(function (k) {
     var b = ikutKelas[String(k.KelasId)];
     if (b) b.guru = String(k.GuruEmel || '') || ('(belum ditugaskan — iDME: ' +
@@ -1521,6 +1591,7 @@ function penyelarasSenarai(token, data) {
 
   var murid = bacaSemua(HELAIAN.MURID).filter(function (m) {
     if (m.Aktif === false || !kidSet[String(m.KelasId)]) return false;
+    if (konteks.tahunSkop.indexOf(String(m.Tahun).trim().toUpperCase()) < 0) return false;
     if (tapisKelas && String(m.KelasId).toUpperCase() !== tapisKelas) return false;
     return true;
   }).map(function (m) {
@@ -1539,7 +1610,7 @@ function penyelarasSenarai(token, data) {
 }
 
 /** Tetapan yang penyelaras boleh ubah sendiri, dengan jejak audit. */
-var TETAPAN_PENYELARAS = ['pgk_miskin_tegar', 'kadar_sehari',
+var TETAPAN_PENYELARAS = ['pgk_miskin_tegar', 'pgk_per_kapita', 'kadar_sehari',
                           'hari_persekolahan', 'kira_kelas_khas', 'kira_prasekolah'];
 
 function penyelarasTetapan(token) {
@@ -1562,8 +1633,10 @@ function penyelarasUbahTetapan(token, data) {
   }
   var nilai = bersihTeks(data.nilai, 60);
 
-  if (kunci === 'pgk_miskin_tegar' || kunci === 'kadar_sehari' ||
-      kunci === 'hari_persekolahan') {
+  if (kunci === 'pgk_per_kapita' && nilai === '') {
+    // Kosong dibenarkan — ia mematikan peringkat 2.
+  } else if (kunci === 'pgk_miskin_tegar' || kunci === 'pgk_per_kapita' ||
+      kunci === 'kadar_sehari' || kunci === 'hari_persekolahan') {
     var n = keNombor(nilai);
     if (n === null || n <= 0) throw Ralat('Nilai mesti nombor lebih besar dari sifar.');
     if (kunci === 'hari_persekolahan' && (n < 1 || n > 366)) {
