@@ -10,5 +10,5 @@
  * supaya GitHub Pages berfungsi pada pelan Free.
  */
 window.RMT_CONFIG = {
-  APPS_SCRIPT_URL: "GANTIKAN_DENGAN_URL_EXEC_ANDA"
+  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbyIdVQWNcaIcOUXq8m2h1YvONMyh9W2aM0g11cZT5-eBJ4bNAaaCdo3l6kNsXMAEX4c/exec"
 };
