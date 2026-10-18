@@ -352,6 +352,57 @@ tbody td:first-child { font-weight: 500; }
 /* Lebar tetap: nilai tetapan ialah angka ringgit, bukan teks panjang. */
 .tetapan-kawal input { width: 9ch; text-align: right; font-variant-numeric: tabular-nums; }
 
+/* =====================================================================
+   Halaman statik (notis privasi, panduan). Tiada JS, tiada appbar —
+   cuma teks yang perlu senang dibaca pada telefon guru.
+   ===================================================================== */
+header.site {
+  max-width: 1040px; margin: 0 auto;
+  padding: var(--s7) var(--s4) var(--s5);
+  border-bottom: 1px solid var(--border);
+}
+header.site h1 { font-size: var(--t-title); margin: 0; }
+header.site p { margin: var(--s1) 0 0; color: var(--text-3); font-size: var(--t-body); }
+
+.card {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: var(--s5);
+  margin-bottom: var(--s4);
+}
+.card h2 { font-size: var(--t-head); margin: 0 0 var(--s3); }
+.card h3 {
+  font-size: var(--t-body); margin: var(--s5) 0 var(--s2); color: var(--text-1);
+}
+.card h3:first-of-type { margin-top: 0; }
+.card p  { margin: 0 0 var(--s3); line-height: 1.65; }
+.card p:last-child, .card ol:last-child, .card ul:last-child { margin-bottom: 0; }
+.card ol, .card ul { margin: 0 0 var(--s3); padding-left: var(--s5); line-height: 1.65; }
+.card li { margin-bottom: var(--s2); }
+.card li:last-child { margin-bottom: 0; }
+
+.hint {
+  font-size: var(--t-label); color: var(--text-3); line-height: 1.6;
+}
+
+/* Langkah bernombor besar — panduan dibaca sambil buat, bukan dihafal. */
+ol.langkah { counter-reset: l; list-style: none; padding-left: 0; }
+ol.langkah > li {
+  counter-increment: l; position: relative;
+  padding-left: var(--s6); margin-bottom: var(--s4);
+}
+ol.langkah > li::before {
+  content: counter(l);
+  position: absolute; left: 0; top: 0;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent-ink);
+  font-size: var(--t-label); font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+footer.site { text-align: center; padding: var(--s5) var(--s4) var(--s7); }
+
 @media (max-width: 680px) {
   main { padding: var(--s4) var(--s3) var(--s6); }
   .hero .nilai { font-size: 2.5rem; }
@@ -420,4 +471,7 @@ tbody td:first-child { font-weight: 500; }
   /* Telefon: kawalan jatuh ke bawah label, bukan dihimpit di sebelahnya. */
   .tetapan-baris { grid-template-columns: 1fr; gap: var(--s2); }
   .tetapan-kawal input { width: 100%; }
+
+  header.site { padding-top: var(--s5); }
+  .card { padding: var(--s4); }
 }

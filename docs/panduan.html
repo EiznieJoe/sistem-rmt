@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panduan Pengguna &middot; Kelayakan RMT</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; form-action 'self'; base-uri 'none'; object-src 'none'">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<header class="site">
+  <h1>Panduan Pengguna</h1>
+  <p>Sistem Pengurusan Kelayakan RMT &middot; SK Rugading</p>
+</header>
+
+<main>
+
+  <div class="card">
+    <h2>Mula di sini</h2>
+    <p>Sistem ini mengambil senarai murid terus dari iDME dan mengira sendiri siapa layak menerima RMT mengikut Surat Pekeliling Kewangan Bil. 1 Tahun 2026. Tiada borang untuk ibu bapa isi dalam sistem ini.</p>
+    <p>Kerja anda ada dua: <strong>betulkan data yang salah atau tiada</strong>, dan <strong>rekod siapa sudah hantar dokumen sokongan</strong>.</p>
+    <p class="hint">Permohonan rasmi tetap melalui Borang PB-1/PB-2 KPM. Sistem ini membantu menyediakan senarai, ia tidak menggantikan borang itu.</p>
+  </div>
+
+  <div class="card">
+    <h2>Log masuk</h2>
+    <ol class="langkah">
+      <li>Buka pautan yang diberi oleh penyelaras.</li>
+      <li>Masukkan emel dan kata laluan yang didaftarkan untuk anda. Kata laluan sekurang-kurangnya 12 aksara.</li>
+      <li>Lupa kata laluan? Tekan <strong>Lupa kata laluan</strong>. Kod 6 angka akan dihantar ke emel anda dan sah selama 30 minit.</li>
+    </ol>
+    <p class="hint">Sesi tamat selepas 8 jam. Selepas itu anda perlu log masuk semula. Jangan kongsi akaun &mdash; setiap tindakan direkod atas nama pemilik akaun.</p>
+  </div>
+
+  <h2 class="sub-tajuk">Untuk guru kelas</h2>
+
+  <div class="card">
+    <h2>Apa yang anda nampak</h2>
+    <p>Anda nampak murid kelas anda sahaja. Kelas dikenal pasti melalui tahun <em>dan</em> nama kelas bersama, jadi guru Tahun Satu Gigih tidak nampak murid Tahun Dua Gigih walaupun nama kelasnya sama.</p>
+    <p>Jalur di atas jadual meringkaskan kelas anda: berapa layak, tidak layak, perlu semak, dan berapa belum hantar dokumen.</p>
+  </div>
+
+  <div class="card">
+    <h2>Betulkan data murid</h2>
+    <p>Mulakan dengan murid berstatus <strong>Perlu semak</strong>. Itu bermakna sistem tidak dapat memutuskan kerana ada data yang tiada atau tidak jelas &mdash; bukan bermakna murid itu tidak layak.</p>
+    <ol class="langkah">
+      <li>Pada kotak <strong>Papar</strong>, pilih <em>Perlu semak sahaja</em>.</li>
+      <li>Klik nama murid. Kad butiran akan terbuka di bawah.</li>
+      <li>Baca mesej di bahagian atas kad. Ia menyatakan sebab status itu, contohnya <em>&ldquo;Tanggungan tiada, tidak dapat dikira per kapita&rdquo;</em>. Itulah yang perlu diisi.</li>
+      <li>Isi medan berkenaan, kemudian tekan <strong>Simpan</strong>.</li>
+      <li>Status kelayakan berubah serta-merta. Tiada butang pengesahan untuk ditekan.</li>
+    </ol>
+
+    <h3>Medan yang anda boleh ubah</h3>
+    <ul>
+      <li><strong>Pendapatan penjaga 1 dan 2</strong> &mdash; pendapatan kasar sebulan, dalam RM. Jumlah kedua-duanya ialah PIR.</li>
+      <li><strong>Tanggungan</strong> &mdash; bilangan dalam satu keluarga: bapa, ibu, dan anak-anak. Antara 1 hingga 30.</li>
+      <li><strong>Warganegara</strong>, <strong>Status asrama</strong>, <strong>Status OKU</strong></li>
+      <li><strong>Catatan</strong> &mdash; nota anda sendiri, contohnya &ldquo;pendapatan disemak dengan penjaga&rdquo;.</li>
+    </ul>
+
+    <h3>Medan yang anda tidak boleh ubah</h3>
+    <p>Nama, nombor pengenalan, tahun dan kelas datang terus dari iDME. Kalau ada yang salah di situ, betulkan dalam iDME, bukan di sini &mdash; import berikutnya akan membawanya masuk.</p>
+
+    <p class="hint">Setiap pembetulan direkod dalam jejak audit bersama nilai sebelum dan selepas, nama anda, dan masa. Import iDME berikutnya tidak akan memadam pembetulan anda.</p>
+  </div>
+
+  <div class="card">
+    <h2>Rekod penghantaran dokumen</h2>
+    <p>Bahagian <strong>Dokumen sokongan</strong> berada di bawah butang Simpan, dalam kad murid yang sama.</p>
+    <ol class="langkah">
+      <li>Klik nama murid untuk buka kadnya.</li>
+      <li>Tatal ke bawah hingga tajuk <strong>Dokumen sokongan</strong>.</li>
+      <li>Pilih <strong>Penghantaran</strong>: Belum hantar, Dokumen lengkap, atau Dokumen tidak lengkap.</li>
+      <li>Isi <strong>Tarikh hantar</strong>. Wajib bila status diisi, dan tidak boleh tarikh masa hadapan.</li>
+      <li>Isi <strong>Catatan dokumen</strong> kalau perlu, contohnya &ldquo;slip gaji ada, surat sumpah belum&rdquo;.</li>
+      <li>Tekan <strong>Simpan dokumen</strong>.</li>
+    </ol>
+
+    <h3>Perkara yang selalu disalahfaham</h3>
+    <p><strong>Dokumen tidak mempengaruhi kelayakan.</strong> Murid yang layak tetap layak walaupun belum hantar dokumen. Dua perkara ini berasingan: kelayakan ikut kriteria pekeliling, dokumen ialah rekod pentadbiran.</p>
+    <p>Sebab itu lencananya pun berbeza rupa. Lencana kelayakan berwarna penuh. Lencana dokumen bergaris sahaja.</p>
+    <p>Menukar status kembali kepada <em>Belum hantar</em> akan membuang tarikh dan catatan sekali. Sistem akan tanya dulu sebelum berbuat demikian.</p>
+  </div>
+
+  <div class="card">
+    <h2>Cara cepat cari kerja yang tinggal</h2>
+    <p>Guna kotak <strong>Papar</strong> di atas jadual:</p>
+    <ul>
+      <li><em>Perlu semak sahaja</em> &mdash; murid yang datanya perlu dibetulkan</li>
+      <li><em>Belum hantar dokumen</em> &mdash; penjaga yang perlu dihubungi</li>
+      <li><em>Dokumen tidak lengkap</em> &mdash; dokumen sudah masuk tetapi ada yang kurang</li>
+    </ul>
+    <p>Bila jadual kosong selepas ditapis, bermakna tiada kerja tertunggak dalam kategori itu.</p>
+  </div>
+
+  <h2 class="sub-tajuk">Untuk penyelaras</h2>
+
+  <div class="card">
+    <h2>Papan pemuka</h2>
+    <p>Angka besar di atas ialah bilangan murid layak, diikuti anggaran peruntukan. Anggaran itu dikira sebagai <em>bilangan layak &times; kadar sehari &times; hari persekolahan</em>.</p>
+    <p>Bar kemajuan menunjukkan berapa ramai sudah hantar dokumen. &ldquo;Diterima&rdquo; termasuk yang tidak lengkap &mdash; dokumen sudah masuk, cuma ada yang kurang. Yang belum hantar langsung itulah kerja yang tinggal.</p>
+    <p>Jadual kelas menunjukkan setiap kelas, guru yang ditugaskan, dan berapa dokumen sudah masuk. Kalau ada kelas tanpa akaun guru, amaran akan muncul di bawah jadual.</p>
+  </div>
+
+  <div class="card">
+    <h2>Tetapan kelayakan</h2>
+    <p>Berada di bahagian paling bawah halaman. Mengubah mana-mana nilai di sini mengubah setiap jumlah di atas serta-merta, dan direkod dalam jejak audit.</p>
+
+    <h3>Had PGK miskin tegar</h3>
+    <p>Peringkat 1 ujian pendapatan. PIR di bawah nilai ini = layak. Nilai lalai RM1,236 diambil dari PGK Makanan nasional HIES 2024 (DOSM). <strong>Sahkan dengan PPD atau JPN sebelum guna secara rasmi.</strong></p>
+
+    <h3>Had per kapita</h3>
+    <p>Peringkat 2, dipakai hanya apabila PIR melebihi PGK. Per kapita dikira dengan membahagikan PIR kepada bilangan tanggungan.</p>
+    <p><strong>Medan ini sengaja dibiarkan kosong.</strong> Selagi kosong, peringkat 2 tidak berjalan dan murid yang gagal peringkat 1 terus menjadi tidak layak. Isi nilainya hanya setelah PPD atau JPN mengesahkan angka itu &mdash; had ini menentukan siapa dapat makan, jadi ia tidak patut diisi secara agak-agak.</p>
+    <p class="hint">Selepas diisi, bilangan &ldquo;Perlu semak&rdquo; mungkin meningkat. Itu normal: murid yang gagal peringkat 1 tetapi tiada nilai Tanggungan tidak dapat dikira per kapita, jadi sistem meminta guru kelas mengisinya dan bukan menolak mereka secara senyap.</p>
+
+    <h3>Kadar RMT sehari</h3>
+    <p>Perenggan 5.1 SPK: RM4.00 untuk Sabah, Sarawak dan Labuan; RM3.50 untuk Semenanjung.</p>
+
+    <h3>Kira prasekolah / Kelas Khas Rendah</h3>
+    <p>Kedua-duanya ditetapkan <em>tidak</em>. Perenggan 3.1 mentakrifkan murid sebagai Tahun 1 hingga 6 sahaja. Jangan ubah tanpa arahan bertulis.</p>
+  </div>
+
+  <div class="card">
+    <h2>Senarai murid dan eksport</h2>
+    <ol class="langkah">
+      <li>Pilih tapisan Kelayakan dan Kelas yang dikehendaki.</li>
+      <li>Tekan <strong>Papar</strong>.</li>
+      <li>Tekan <strong>Eksport CSV</strong> untuk memuat turun senarai penuh, termasuk status dan tarikh penghantaran dokumen.</li>
+    </ol>
+    <p class="hint">Fail CSV mengandungi data peribadi murid. Simpan dalam peranti sekolah sahaja. Jangan hantar melalui WhatsApp peribadi atau emel peribadi.</p>
+  </div>
+
+  <div class="card">
+    <h2>Import data iDME</h2>
+    <p>Dilakukan dari editor Apps Script, bukan dari halaman ini. Rujuk pentadbir sistem.</p>
+    <p>Yang perlu anda tahu: import berikutnya <strong>tidak</strong> memadam pembetulan guru atau rekod dokumen. Kalau iDME membawa nilai berbeza untuk medan yang guru sudah betulkan, ia dilaporkan sebagai percanggahan untuk anda semak, bukan ditimpa senyap-senyap.</p>
+  </div>
+
+  <div class="card">
+    <h2>Soalan lazim</h2>
+
+    <h3>Murid ini sepatutnya layak, tetapi sistem kata tidak layak</h3>
+    <p>Klik namanya dan baca mesej dalam kadnya. Ia menyatakan laluan dan sebab keputusan itu. Biasanya pendapatan dalam iDME tidak tepat, atau bilangan tanggungan tiada.</p>
+
+    <h3>Kenapa murid saya tidak muncul langsung</h3>
+    <p>Tiga kemungkinan: murid itu bukan Tahun 1 hingga 6; murid itu tiada dalam import iDME terkini kerana sudah bertukar sekolah; atau kelas itu belum ditugaskan kepada akaun anda. Hubungi penyelaras.</p>
+
+    <h3>Saya tersilap isi, boleh batalkan?</h3>
+    <p>Boleh. Isi semula dengan nilai yang betul dan tekan Simpan. Jejak audit menyimpan kedua-dua nilai lama dan baharu, jadi tiada apa yang hilang.</p>
+
+    <h3>Nombor dalam papan pemuka tidak sama dengan semalam</h3>
+    <p>Kelayakan dikira semula setiap kali halaman dibuka, bukan disimpan. Jadi setiap pembetulan guru, atau perubahan tetapan oleh penyelaras, akan mengubah jumlah serta-merta.</p>
+  </div>
+
+</main>
+
+<footer class="site"><a href="index.html">Kembali ke sistem</a> &middot; <a href="privasi.html">Notis privasi</a></footer>
+</body>
+</html>
