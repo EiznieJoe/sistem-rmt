@@ -161,28 +161,28 @@
 
   <!-- ============ GURU KELAS ============ -->
   <div id="pane-guru" hidden>
-    <section class="seksyen">
-      <h2>Kelas saya</h2>
-      <div class="kotak gulung">
-        <table>
-          <thead><tr>
-            <th>Kelas</th><th class="num">Murid</th><th class="num">Layak</th>
-            <th class="num">Perlu semak</th><th class="num">Belum sah</th><th></th>
-          </tr></thead>
-          <tbody id="jadual-kelas-guru"></tbody>
-        </table>
-      </div>
-      <div class="mesej" id="msg-guru" hidden></div>
-    </section>
+    <div class="mesej" id="msg-guru" hidden></div>
 
     <section class="seksyen" id="kad-murid" hidden>
+      <div class="cip" id="pilih-kelas"></div>
       <h2><span id="tajuk-kelas"></span> <span class="kira" id="kira-murid"></span></h2>
+
       <div class="kotak">
+        <div class="ringkas" id="ringkas-kelas"></div>
         <div class="tapis">
+          <div>
+            <label for="f-murid">Papar</label>
+            <select id="f-murid">
+              <option value="">Semua murid</option>
+              <option value="PERLU_SEMAK">Perlu semak sahaja</option>
+              <option value="BELUM_SAH">Belum disahkan sahaja</option>
+              <option value="LAYAK">Layak sahaja</option>
+              <option value="TIDAK_LAYAK">Tidak layak sahaja</option>
+            </select>
+          </div>
           <div class="butang">
             <button type="button" id="btn-sahkan-kelas">Sahkan semua yang jelas</button>
           </div>
-          <p class="nota" id="formula-guru"></p>
         </div>
         <div class="gulung">
           <table>
@@ -196,6 +196,7 @@
           </table>
         </div>
       </div>
+      <p class="nota" id="formula-guru"></p>
       <div class="mesej" id="msg-kelas" hidden></div>
     </section>
 

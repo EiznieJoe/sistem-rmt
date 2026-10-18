@@ -41,6 +41,30 @@
     LAYAK: "Layak", TIDAK_LAYAK: "Tidak layak",
     PERLU_SEMAK: "Perlu semak", LUAR_SKOP: "Luar skop"
   };
+
+  /* Nama medan dan kunci tetapan ialah pengenal dalaman. Pengguna tidak
+     sepatutnya nampak PendapatanPenjaga1 atau pgk_miskin_tegar. */
+  var LABEL_MEDAN = {
+    PendapatanPenjaga1: "pendapatan penjaga 1",
+    PendapatanPenjaga2: "pendapatan penjaga 2",
+    Tanggungan: "bilangan tanggungan",
+    Warganegara: "status warganegara",
+    StatusAsrama: "status asrama",
+    StatusOku: "status OKU",
+    PenjagaNama: "nama penjaga",
+    HubunganPenjaga: "hubungan penjaga",
+    PenjagaTelefon: "telefon penjaga"
+  };
+  var LABEL_TETAPAN = {
+    pgk_miskin_tegar: "Had PGK miskin tegar (RM sebulan)",
+    pgk_per_kapita: "Had per kapita (RM sebulan)",
+    kadar_sehari: "Kadar RMT sehari (RM)",
+    hari_persekolahan: "Hari persekolahan setahun",
+    kira_kelas_khas: "Kira Kelas Khas Rendah?",
+    kira_prasekolah: "Kira prasekolah?"
+  };
+  function namaMedan(k) { return LABEL_MEDAN[k] || k; }
+  function namaTetapan(k) { return LABEL_TETAPAN[k] || k; }
   var IKON_STATUS = { LAYAK: "good", PERLU_SEMAK: "warning" };
 
   function lencana(status) {
@@ -88,6 +112,7 @@
   }
 
   window.UI = { el: el, ikon: ikon, lencana: lencana, LABEL: LABEL,
+                namaMedan: namaMedan, namaTetapan: namaTetapan,
                 tarikh: tarikh, rm: rm, nombor: nombor,
                 papar: papar, sorok: sorok, muatTurunCsv: muatTurunCsv };
 })();

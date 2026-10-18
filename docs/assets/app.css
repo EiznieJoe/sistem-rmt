@@ -78,7 +78,7 @@ select:focus-visible, textarea:focus-visible, tr:focus-visible {
   padding: var(--s3) var(--s4);
 }
 .appbar-dalam {
-  max-width: 1120px; margin: 0 auto;
+  max-width: 1040px; margin: 0 auto;
   display: flex; align-items: center; gap: var(--s4);
 }
 .jenama { display: flex; align-items: baseline; gap: var(--s2); min-width: 0; }
@@ -93,7 +93,7 @@ select:focus-visible, textarea:focus-visible, tr:focus-visible {
   padding-right: var(--s2); border-right: 1px solid var(--border);
 }
 
-main { max-width: 1120px; margin: 0 auto; padding: var(--s5) var(--s4) var(--s7); }
+main { max-width: 1040px; margin: 0 auto; padding: var(--s5) var(--s4) var(--s7); }
 
 /* ---------- Seksyen ---------- */
 .seksyen { margin-bottom: var(--s6); }
@@ -161,8 +161,9 @@ main { max-width: 1120px; margin: 0 auto; padding: var(--s5) var(--s4) var(--s7)
 .gulung { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 table { width: 100%; border-collapse: collapse; font-size: var(--t-cell); }
 thead th {
-  position: sticky; top: 57px; z-index: 5;
-  background: var(--surface-raised);
+  /* TIADA position:sticky. Di dalam bekas .gulung (overflow-x:auto), kepala
+     melekat terapung atas baris pertama dan memotong teksnya separuh. */
+  background: var(--surface-sunk);
   text-align: left; font-size: var(--t-label); font-weight: 600;
   letter-spacing: .03em; text-transform: uppercase; color: var(--text-3);
   padding: var(--s2) var(--s3); border-bottom: 1px solid var(--border-strong);
@@ -270,14 +271,124 @@ ol.jejak time { display: block; color: var(--text-3); font-size: var(--t-label);
 
 footer { padding: var(--s5) var(--s4); text-align: center; font-size: var(--t-label); color: var(--text-3); }
 
-@media (max-width: 640px) {
-  main { padding: var(--s4) var(--s3) var(--s6); }
-  thead th { top: 53px; }
-  .lajur-sembunyi { display: none; }
+/* Lajur nama menyerap ruang lebih; lajur nombor mengecil ikut kandungan.
+   Tanpa ini, 1,100px dibahagi rata dan jadual nampak berlubang. */
+th:first-child, td:first-child { width: 100%; }
+th:not(:first-child), td:not(:first-child) { white-space: nowrap; width: 1%; }
+
+tbody td:first-child { font-weight: 500; }
+
+/* Jalur pintasan: ringkasan kelas untuk guru */
+.ringkas {
+  display: flex; flex-wrap: wrap; gap: var(--s4);
+  padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border);
+}
+.ringkas > div { display: flex; align-items: baseline; gap: var(--s2); }
+.ringkas .n { font-size: 1.15rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.ringkas .t { font-size: var(--t-label); color: var(--text-2); }
+.ringkas .n.amaran { color: var(--warn); }
+.ringkas .n.baik { color: var(--accent); }
+
+/* Pemilih kelas — cip, bukan jadual sebaris */
+.cip { display: flex; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s3); }
+.cip button[aria-pressed="true"] {
+  background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600;
 }
 
-/* Penanda medan yang guru kelas sudah betulkan — import tidak akan menimpanya. */
-.diubah {
-  display: block; margin-top: 1px;
-  font-size: var(--t-label); color: var(--warn);
+/* =====================================================================
+   Pane tetapan — label dan kawalan dalam dua lajur supaya semua input
+   berbaris pada paksi yang sama, tidak kira panjang label.
+   ===================================================================== */
+.tetapan-baris {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--s3) var(--s5);
+  padding: var(--s4) 0;
+  border-bottom: 1px solid var(--border);
+}
+.tetapan-baris:last-child { border-bottom: 0; }
+
+.tetapan-label { min-width: 0; }
+.tetapan-label label {
+  display: block;
+  font-size: var(--t-body);
+  font-weight: 600;
+  color: var(--text-1);
+}
+/* `.nota` global ada margin-top yang terlalu besar untuk ruang ketat ini. */
+.tetapan-label .nota { margin: var(--s1) 0 0; line-height: 1.45; }
+
+.tetapan-kawal { display: flex; align-items: center; gap: var(--s2); }
+/* Lebar tetap: nilai tetapan ialah angka ringgit, bukan teks panjang. */
+.tetapan-kawal input { width: 9ch; text-align: right; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 680px) {
+  main { padding: var(--s4) var(--s3) var(--s6); }
+  .hero .nilai { font-size: 2.5rem; }
+
+  /* Bar aplikasi: nama penuh pegawai memakan seluruh lebar pada telefon. */
+  .jenama span { display: none; }
+  .siapa { max-width: 34vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Jadual jadi kad sebaris. Jadual lebar pada telefon memaksa nama pecah
+     empat baris dan "RM 719.18" berpecah dua — tidak boleh dibaca.
+     Baris jadi bekas flex: nama satu baris penuh, selebihnya mengalir
+     mendatar dengan labelnya sendiri. */
+  table, tbody { display: block; width: auto; }
+  thead { display: none; }
+
+  tr {
+    display: flex; flex-wrap: wrap; align-items: baseline;
+    gap: var(--s1) var(--s3);
+    padding: var(--s3) var(--s4);
+    border-bottom: 1px solid var(--border);
+  }
+  tr:last-child { border-bottom: 0; }
+
+  /* `tbody td` (spesifisiti 0,0,0,2) menang atas `td`, jadi sempadan
+     desktop kekal dan meninggalkan garis halus bawah setiap sel. */
+  tbody td, td { display: block; padding: 0; border: 0; text-align: left; }
+
+  /* Lajur keutamaan rendah kekal tersembunyi. :not() di sini penting —
+     tanpa ia, peraturan td[data-label] di bawah menang atas spesifisiti
+     yang sama dan lajur tersembunyi muncul semula bertindan. */
+  td.lajur-sembunyi { display: none; }
+
+  td:first-child, td.utama-sel {
+    flex: 0 0 100%;
+    font-size: var(--t-body); font-weight: 600;
+    margin-bottom: var(--s1);
+  }
+
+  td[data-label]:not(.lajur-sembunyi):not(:first-child) {
+    display: inline-flex; align-items: baseline; gap: var(--s1);
+    white-space: nowrap; font-variant-numeric: tabular-nums;
+    /* width:auto membatalkan `width: 1%` desktop. Tanpa ini setiap sel
+       mengecil kepada ~24px dan kandungannya melimpah bertindih. */
+    width: auto; flex: 0 1 auto;
+  }
+  td[data-label]:not(.lajur-sembunyi):not(:first-child)::before {
+    content: attr(data-label);
+    font-size: var(--t-label); font-weight: 500; color: var(--text-3);
+    text-transform: uppercase; letter-spacing: .03em;
+  }
+
+  /* Tanda betul di sebelah lencana sudah jelas — label "SAH" hanya
+     memaksa baris ketiga yang tidak perlu. */
+  td.sah { text-align: left; }
+  /* Spesifisiti mesti sepadan dengan peraturan ::before di atas (0,0,3,2),
+     kalau tidak label "SAH" tetap muncul dan memaksa baris ketiga. */
+  td.sah[data-label]:not(.lajur-sembunyi):not(:first-child)::before { content: none; }
+  td.sah .tanda { width: auto; font-size: 1.05rem; }
+  td .sub { display: inline; margin-left: var(--s1); }
+  td .diubah { display: block; margin-top: 2px; font-weight: 400; }
+
+  .kosong { display: block; flex: 0 0 100%; }
+  .ringkas { gap: var(--s2) var(--s3); }
+  .tapis > div { min-width: 0; flex: 1 1 100%; }
+
+  /* Telefon: kawalan jatuh ke bawah label, bukan dihimpit di sebelahnya. */
+  .tetapan-baris { grid-template-columns: 1fr; gap: var(--s2); }
+  .tetapan-kawal input { width: 100%; }
 }

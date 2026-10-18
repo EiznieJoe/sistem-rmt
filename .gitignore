@@ -9,3 +9,7 @@ node_modules/
 *.xls
 *.csv
 data/
+
+# Playwright hanya alat pengesahan tempatan, bukan kebergantungan projek.
+package-lock.json
+node_modules/

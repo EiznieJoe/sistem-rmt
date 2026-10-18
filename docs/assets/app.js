@@ -167,12 +167,13 @@
       d.ikutKelas.forEach(function (k) {
         tb.appendChild(el("tr", null, [
           el("td", { text: k.kelasId }),
-          el("td", { class: "num", text: UI.nombor(k.jumlah) }),
-          el("td", { class: "num", text: UI.nombor(k.LAYAK) }),
-          el("td", { class: "num", text: k.PERLU_SEMAK ? UI.nombor(k.PERLU_SEMAK) : "\u2014" }),
-          el("td", { class: "num",
+          el("td", { class: "num", "data-label": "Murid", text: UI.nombor(k.jumlah) }),
+          el("td", { class: "num", "data-label": "Layak", text: UI.nombor(k.LAYAK) }),
+          el("td", { class: "num", "data-label": "Perlu semak",
+            text: k.PERLU_SEMAK ? UI.nombor(k.PERLU_SEMAK) : "\u2014" }),
+          el("td", { class: "num", "data-label": "Disahkan",
             text: UI.nombor(k.jumlah - k.belumDisahkan) + " / " + UI.nombor(k.jumlah) }),
-          el("td", { class: "lajur-sembunyi", text: k.guru })
+          el("td", { class: "lajur-sembunyi", "data-label": "Guru", text: k.guru })
         ]));
       });
       if (!d.ikutKelas.length) {
@@ -196,6 +197,8 @@
       });
 
       muatTetapan();
+      papar($("msg-senarai"), "info",
+        "Pilih tapisan di atas, kemudian tekan Papar.");
     }).catch(function (e) {
       var tb = $("jadual-kelas");
       tb.textContent = "";
@@ -210,22 +213,26 @@
       wrap.textContent = "";
       d.tetapan.forEach(function (t) {
         var input = el("input", { id: "t-" + t.kunci, value: t.nilai });
-        var btn = el("button", { type: "button", text: "Simpan" });
+        var btn = el("button", { type: "button", class: "kecil", text: "Simpan" });
         btn.onclick = function () {
-          papar($("msg-tetapan"), "info", "Menyimpan…");
+          papar($("msg-tetapan"), "info", "Menyimpan\u2026");
           RMT.panggil("ubahTetapan", { kunci: t.kunci, nilai: input.value })
             .then(function () {
-              papar($("msg-tetapan"), "ok", t.kunci + " dikemas kini. Mengira semula…");
+              papar($("msg-tetapan"), "ok",
+                UI.namaTetapan(t.kunci) + " dikemas kini. Mengira semula\u2026");
               muatRingkasan();
             })
             .catch(function (e) { papar($("msg-tetapan"), "err", e.message); });
         };
-        wrap.appendChild(el("div", { class: "tapis" }, [
-          el("label", null, [t.kunci, input]), btn
+        wrap.appendChild(el("div", { class: "tetapan-baris" }, [
+          el("div", { class: "tetapan-label" }, [
+            el("label", { for: "t-" + t.kunci, text: UI.namaTetapan(t.kunci) }),
+            t.nota ? el("span", { class: "nota", text: t.nota }) : null
+          ]),
+          el("div", { class: "tetapan-kawal" }, [input, btn])
         ]));
-        if (t.nota) wrap.appendChild(el("p", { class: "nota", text: t.nota }));
       });
-    });
+    }).catch(function (e) { papar($("msg-tetapan"), "err", e.message); });
   }
 
   var senaraiSemasa = [];
@@ -282,34 +289,39 @@
   function muatKelasSaya() {
     RMT.panggil("kelasSaya").then(function (d) {
       kelasSaya = d.kelas;
-      var tb = $("jadual-kelas-guru");
-      tb.textContent = "";
       if (!d.kelas.length) {
         papar($("msg-guru"), "warn",
           "Tiada kelas ditugaskan kepada anda. Hubungi pentadbir sistem.");
         return;
       }
       sorok($("msg-guru"));
-      d.kelas.forEach(function (k) {
-        var btn = el("button", { type: "button", text: "Buka" });
-        btn.onclick = function () { bukaKelas(k.kelasId); };
-        tb.appendChild(el("tr", null, [
-          el("td", { text: k.kelasId }),
-          el("td", { class: "num", text: UI.nombor(k.ringkasan.jumlah) }),
-          el("td", { class: "num", text: UI.nombor(k.ringkasan.LAYAK) }),
-          el("td", { class: "num", text: UI.nombor(k.ringkasan.PERLU_SEMAK) }),
-          el("td", { class: "num", text: UI.nombor(k.ringkasan.belumDisahkan) }),
-          el("td", null, [btn])
-        ]));
-      });
-      if (d.kelas.length === 1) bukaKelas(d.kelas[0].kelasId);
+
+      /* Guru biasanya pegang satu kelas. Jadual satu baris membazir ruang —
+         guna cip, dan sembunyikan terus kalau hanya ada satu. */
+      var cip = $("pilih-kelas");
+      cip.textContent = "";
+      cip.hidden = d.kelas.length < 2;
+      if (d.kelas.length > 1) {
+        d.kelas.forEach(function (k) {
+          var b = el("button", { type: "button", text: k.kelasId,
+                                 "aria-pressed": "false" });
+          b.onclick = function () { bukaKelas(k.kelasId); };
+          cip.appendChild(b);
+        });
+      }
+      bukaKelas(d.kelas[0].kelasId);
     }).catch(function (e) { papar($("msg-guru"), "err", e.message); });
   }
 
   function bukaKelas(kelasId) {
-    papar($("msg-kelas"), "info", "Memuatkan…");
     $("kad-murid").hidden = false;
     $("kad-edit").hidden = true;
+    papar($("msg-kelas"), "info", "Memuatkan\u2026");
+
+    Array.prototype.forEach.call($("pilih-kelas").children, function (b) {
+      b.setAttribute("aria-pressed", b.textContent === kelasId ? "true" : "false");
+    });
+
     RMT.panggil("senaraiMurid", { kelasId: kelasId }).then(function (d) {
       kelasAktif = d.kelas;
       muridKelas = d.murid;
@@ -317,30 +329,78 @@
       $("tajuk-kelas").textContent = d.kelas.kelasId;
       $("kira-murid").textContent = d.murid.length + " murid";
       $("formula-guru").textContent = d.konteks.formula;
+      lukisRingkas();
       lukisMurid();
     }).catch(function (e) { papar($("msg-kelas"), "err", e.message); });
   }
 
+  /* Jalur ringkas: apa yang guru perlu tahu sebelum mula. */
+  function lukisRingkas() {
+    var k = { LAYAK: 0, TIDAK_LAYAK: 0, PERLU_SEMAK: 0 }, belum = 0;
+    muridKelas.forEach(function (m) {
+      if (k[m.kelayakan] !== undefined) k[m.kelayakan]++;
+      if (!m.disahkan) belum++;
+    });
+    var wrap = $("ringkas-kelas");
+    wrap.textContent = "";
+    [[k.LAYAK, "layak", "baik"],
+     [k.TIDAK_LAYAK, "tidak layak", ""],
+     [k.PERLU_SEMAK, "perlu semak", k.PERLU_SEMAK ? "amaran" : ""],
+     [belum, "belum disahkan", ""]
+    ].forEach(function (t) {
+      wrap.appendChild(el("div", null, [
+        el("span", { class: "n " + (t[2] || ""), text: UI.nombor(t[0]) }),
+        el("span", { class: "t", text: t[1] })
+      ]));
+    });
+  }
+
+  function ditapisMurid() {
+    var f = $("f-murid").value;
+    if (!f) return muridKelas;
+    if (f === "BELUM_SAH") return muridKelas.filter(function (m) { return !m.disahkan; });
+    return muridKelas.filter(function (m) { return m.kelayakan === f; });
+  }
+
+  $("f-murid").onchange = function () { lukisMurid(); };
+
   function lukisMurid() {
+    var rows = ditapisMurid();
     var tb = $("jadual-murid-guru");
     tb.textContent = "";
-    muridKelas.forEach(function (m) {
-      var tr = el("tr", { class: "klik" }, [
-        el("td", null, [m.nama, m.medanDiubah.length
-          ? el("div", { class: "diubah", text: "diubah: " + m.medanDiubah.join(", ") }) : null]),
-        el("td", { class: "num lajur-sembunyi",
+
+    if (!rows.length) {
+      tb.appendChild(el("tr", null, [el("td", { colspan: "6", class: "kosong",
+        text: $("f-murid").value
+          ? "Tiada murid dalam tapisan ini. Bagus \u2014 tiada kerja tertunggak."
+          : "Tiada murid dalam kelas ini." })]));
+      return;
+    }
+
+    rows.forEach(function (m) {
+      var tr = el("tr", { class: "klik", tabindex: "0" }, [
+        el("td", { class: "utama-sel" }, [m.nama, m.medanDiubah.length
+          ? el("span", { class: "diubah", text: "diubah: " +
+              m.medanDiubah.map(UI.namaMedan).join(", ") })
+          : null]),
+        el("td", { class: "num lajur-sembunyi", "data-label": "Penjaga 1",
           text: m.pendapatanPenjaga1 === null ? "\u2014" : UI.rm(m.pendapatanPenjaga1) }),
-        el("td", { class: "num lajur-sembunyi",
+        el("td", { class: "num lajur-sembunyi", "data-label": "Penjaga 2",
           text: m.pendapatanPenjaga2 === null ? "\u2014" : UI.rm(m.pendapatanPenjaga2) }),
-        el("td", { class: "num" }, [
+        el("td", { class: "num", "data-label": "PIR" }, [
           m.pir === null ? "\u2014" : UI.rm(m.pir),
           m.perKapita == null ? null
             : el("span", { class: "sub", text: "pk " + UI.rm(m.perKapita) })
         ]),
-        el("td", null, [UI.lencana(m.kelayakan)]),
-        el("td", { text: m.disahkan ? "Ya" : "Belum" })
+        el("td", { "data-label": "Kelayakan" }, [UI.lencana(m.kelayakan)]),
+        el("td", { class: "sah", "data-label": "Sah" }, [m.disahkan
+          ? el("span", { class: "tanda ok", title: "Disahkan", text: "\u2713" })
+          : el("span", { class: "tanda", title: "Belum disahkan", text: "\u2013" })])
       ]);
       tr.onclick = function () { bukaMurid(m); };
+      tr.onkeydown = function (ev) {
+        if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); bukaMurid(m); }
+      };
       tb.appendChild(tr);
     });
   }
