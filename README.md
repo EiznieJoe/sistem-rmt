@@ -91,8 +91,14 @@ hilang, import berhenti dan menamakannya — ia tidak meneka.
 ### 1. Spreadsheet dan Apps Script
 
 1. Cipta Google Sheet baharu → **Extensions → Apps Script**.
-2. Untuk setiap fail dalam `apps-script/`: **+ → Script**, namakan sama
-   (tanpa `.gs`), tampal kandungannya. Urutan nama penting.
+2. Tampal kod. Dua cara, sama hasilnya:
+   - **Senang:** buka `Kod.gs` (gabungan semua fail), salin semuanya ke dalam
+     fail `Code.gs` yang sedia ada. Satu tampalan sahaja.
+   - **Kemas:** untuk setiap fail dalam `apps-script/`, **+ → Script**,
+     namakan sama (tanpa `.gs`), tampal kandungannya. Urutan nama penting.
+
+   `Kod.gs` dijana dari `apps-script/` oleh `scripts/bina-kod-gs.sh`. Sumber
+   kebenaran ialah `apps-script/` — jangan edit `Kod.gs` terus.
 3. **Project Settings** → tanda *Show "appsscript.json"*, ganti dengan
    `apps-script/appsscript.json`.
 4. Jalankan `pasang()`. Benarkan kebenaran. Selamat dijalankan berulang.
