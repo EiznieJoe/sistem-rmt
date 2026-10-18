@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Permohonan Bantuan RMT</title>
+<meta name="description" content="Borang permohonan Rancangan Makanan Tambahan (RMT) dan semakan status permohonan.">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; form-action 'self'; base-uri 'none'; object-src 'none'">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+
+<header class="site">
+  <h1>Permohonan Bantuan RMT</h1>
+  <p>Rancangan Makanan Tambahan &middot; sekolah rendah</p>
+</header>
+
+<main>
+  <div class="tabs" role="tablist">
+    <button id="tab-mohon" role="tab" aria-selected="true"  aria-controls="pane-mohon">Permohonan baharu</button>
+    <button id="tab-semak" role="tab" aria-selected="false" aria-controls="pane-semak">Semak status</button>
+  </div>
+
+  <!-- ============ PERMOHONAN BAHARU ============ -->
+  <section id="pane-mohon" role="tabpanel" aria-labelledby="tab-mohon">
+    <form id="borang" class="card" novalidate>
+      <h2>Maklumat murid</h2>
+      <p class="hint">Satu borang untuk seorang murid. Kalau ada lebih seorang anak, hantar borang berasingan.</p>
+
+      <label>Sekolah
+        <select id="sekolah_id" required><option value="">Memuatkan&hellip;</option></select>
+      </label>
+
+      <div class="row">
+        <label>Nama penuh murid
+          <input id="murid_nama" maxlength="150" required autocomplete="off">
+        </label>
+        <label>No. Kad Pengenalan murid
+          <input id="murid_ic" inputmode="numeric" maxlength="14" placeholder="12 angka" required autocomplete="off">
+        </label>
+      </div>
+
+      <div class="row">
+        <label>Tahun
+          <select id="murid_tahun" required>
+            <option value="">Pilih</option>
+            <option>1</option><option>2</option><option>3</option>
+            <option>4</option><option>5</option><option>6</option>
+          </select>
+        </label>
+        <label>Kelas <span class="opt">(pilihan)</span>
+          <input id="murid_kelas" maxlength="40" autocomplete="off">
+        </label>
+      </div>
+
+      <h2 class="mt-lg">Maklumat penjaga</h2>
+      <p class="hint">Kami tidak meminta No. Kad Pengenalan penjaga — tidak perlu untuk proses ini.</p>
+
+      <div class="row">
+        <label>Nama penjaga
+          <input id="penjaga_nama" maxlength="150" required autocomplete="off">
+        </label>
+        <label>No. telefon
+          <input id="penjaga_telefon" inputmode="tel" maxlength="20" placeholder="01x-xxxxxxx" required autocomplete="off">
+        </label>
+      </div>
+
+      <label>Hubungan dengan murid
+        <select id="penjaga_hubungan" required>
+          <option value="">Pilih</option>
+          <option>Bapa</option><option>Ibu</option>
+          <option>Penjaga sah</option><option>Datuk/Nenek</option>
+          <option>Lain-lain</option>
+        </select>
+      </label>
+
+      <h2 class="mt-lg">Maklumat isi rumah</h2>
+
+      <div class="row">
+        <label>Bilangan orang dalam isi rumah
+          <input id="bil_isi_rumah" type="number" min="1" max="30" required>
+        </label>
+        <label>Pendapatan kasar isi rumah sebulan (RM)
+          <input id="pendapatan_isi_rumah" type="number" min="0" step="0.01" required>
+        </label>
+      </div>
+      <p class="hint" id="perkapita"></p>
+
+      <div class="check">
+        <input type="checkbox" id="ekasih">
+        <span><label for="ekasih" class="inline">Isi rumah berdaftar dalam eKasih</label></span>
+      </div>
+      <label id="lbl-ekasih" hidden>No. eKasih
+        <input id="no_ekasih" maxlength="40" autocomplete="off">
+      </label>
+
+      <h2 class="mt-lg">Akuan</h2>
+
+      <div class="check">
+        <input type="checkbox" id="akuan_benar" required>
+        <span>Saya mengaku maklumat di atas benar. Saya faham maklumat palsu boleh menyebabkan permohonan ditolak dan bantuan ditarik.</span>
+      </div>
+
+      <div class="check">
+        <input type="checkbox" id="persetujuan_pdpa" required>
+        <span>Saya bersetuju maklumat ini diproses untuk tujuan permohonan RMT sahaja, disimpan selama 3 tahun, dan hanya boleh dilihat oleh pegawai sekolah yang terlibat.
+          <a href="privasi.html" target="_blank" rel="noopener">Baca notis privasi</a>.</span>
+      </div>
+
+      <button type="submit" class="primary" id="btn-hantar">Hantar permohonan</button>
+      <div class="msg" id="msg-mohon" hidden></div>
+    </form>
+
+    <div class="card" id="siap" hidden>
+      <h2>Permohonan diterima</h2>
+      <p>Simpan nombor rujukan ini. Anda perlukan nombor ini bersama No. Kad Pengenalan murid untuk menyemak status.</p>
+      <p class="ref" id="ref-baru"></p>
+      <div class="actions">
+        <button type="button" class="ghost" id="btn-salin">Salin nombor rujukan</button>
+        <button type="button" class="ghost" id="btn-baru">Hantar borang lain</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SEMAK STATUS ============ -->
+  <section id="pane-semak" role="tabpanel" aria-labelledby="tab-semak" hidden>
+    <form id="borang-semak" class="card" novalidate>
+      <h2>Semak status permohonan</h2>
+      <div class="row">
+        <label>No. rujukan
+          <input id="s_ruj" maxlength="20" placeholder="RMT-26-XXXXXXXX" required autocomplete="off">
+        </label>
+        <label>No. Kad Pengenalan murid
+          <input id="s_ic" inputmode="numeric" maxlength="14" required autocomplete="off">
+        </label>
+      </div>
+      <button type="submit" class="primary">Semak</button>
+      <div class="msg" id="msg-semak" hidden></div>
+    </form>
+
+    <div class="card" id="hasil" hidden>
+      <div class="topbar">
+        <h2 class="m0">Status permohonan</h2>
+        <span id="h-badge"></span>
+      </div>
+      <dl class="kv mt-md" id="h-kv"></dl>
+      <div class="msg warn" id="h-betulkan" hidden></div>
+      <div class="msg err"  id="h-tolak" hidden></div>
+      <div class="actions">
+        <button type="button" class="ghost" id="btn-betul" hidden>Betulkan dan hantar semula</button>
+        <button type="button" class="ghost danger" id="btn-tarik" hidden>Tarik balik permohonan</button>
+      </div>
+    </div>
+
+    <form class="card" id="borang-betul" hidden novalidate>
+      <h2>Betulkan maklumat</h2>
+      <p class="hint">Isi hanya medan yang perlu diubah. Medan yang dibiarkan kosong akan kekal seperti sebelum ini.</p>
+      <div class="row">
+        <label>Nama penuh murid <input id="b_murid_nama" maxlength="150" autocomplete="off"></label>
+        <label>Tahun
+          <select id="b_murid_tahun"><option value="">Tiada perubahan</option>
+            <option>1</option><option>2</option><option>3</option>
+            <option>4</option><option>5</option><option>6</option></select>
+        </label>
+      </div>
+      <div class="row">
+        <label>Nama penjaga <input id="b_penjaga_nama" maxlength="150" autocomplete="off"></label>
+        <label>No. telefon <input id="b_penjaga_telefon" maxlength="20" autocomplete="off"></label>
+      </div>
+      <div class="row">
+        <label>Bilangan isi rumah <input id="b_bil_isi_rumah" type="number" min="1" max="30"></label>
+        <label>Pendapatan isi rumah (RM) <input id="b_pendapatan" type="number" min="0" step="0.01"></label>
+      </div>
+      <label>No. eKasih <input id="b_no_ekasih" maxlength="40" autocomplete="off"></label>
+      <button type="submit" class="primary">Hantar semula</button>
+      <div class="msg" id="msg-betul" hidden></div>
+    </form>
+  </section>
+</main>
+
+<footer class="site">
+  <a href="privasi.html">Notis privasi</a> &middot;
+  <a href="staf.html">Log masuk pegawai</a>
+</footer>
+
+<script src="assets/config.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/ui.js"></script>
+<script src="assets/apply.js"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pegawai &middot; Permohonan RMT</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; form-action 'self'; base-uri 'none'; object-src 'none'">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="topbar">
+    <div>
+      <h1>Pengurusan Permohonan RMT</h1>
+      <p id="siapa">Log masuk pegawai</p>
+    </div>
+    <button type="button" class="ghost" id="btn-keluar" hidden>Log keluar</button>
+  </div>
+</header>
+
+<main class="wide">
+
+  <!-- ============ LOG MASUK ============ -->
+  <form id="borang-masuk" class="card card-sempit" novalidate>
+    <h2>Log masuk</h2>
+    <p class="hint">Akaun pegawai sahaja. Akaun dicipta oleh admin sekolah.</p>
+    <label>Emel <input id="emel" type="email" required autocomplete="username"></label>
+    <label>Kata laluan <input id="katalaluan" type="password" required autocomplete="current-password"></label>
+    <button type="submit" class="primary" id="btn-masuk">Log masuk</button>
+    <div class="msg" id="msg-masuk" hidden></div>
+  </form>
+
+  <!-- ============ PAPAN PEMUKA ============ -->
+  <div id="papan" hidden>
+
+    <div class="card">
+      <div class="filters">
+        <label>Status
+          <select id="f-status">
+            <option value="">Semua</option>
+            <option value="DIHANTAR">Dihantar</option>
+            <option value="DALAM_SEMAKAN">Dalam semakan</option>
+            <option value="DIPULANGKAN">Dipulangkan</option>
+            <option value="DALAM_KELULUSAN">Dalam kelulusan</option>
+            <option value="LULUS">Lulus</option>
+            <option value="TOLAK">Tolak</option>
+            <option value="DITARIK_BALIK">Ditarik balik</option>
+            <option value="GUGUR">Gugur</option>
+          </select>
+        </label>
+        <label>Cari nama murid / no. rujukan
+          <input id="f-cari" maxlength="60" autocomplete="off">
+        </label>
+        <button type="button" class="ghost" id="btn-muat">Muat semula</button>
+        <button type="button" class="ghost" id="btn-csv">Eksport CSV</button>
+      </div>
+      <div class="msg" id="msg-papan" hidden></div>
+      <p class="hint" id="ringkasan"></p>
+    </div>
+
+    <div class="card scroll">
+      <table>
+        <thead><tr>
+          <th>No. rujukan</th><th>Murid</th><th>Tahun</th>
+          <th>Per kapita</th><th>Status</th><th>Umur kes</th>
+        </tr></thead>
+        <tbody id="senarai"></tbody>
+      </table>
+    </div>
+
+    <div class="card" id="butiran" hidden>
+      <div class="topbar">
+        <h2 class="m0" id="d-ruj"></h2>
+        <span id="d-badge"></span>
+      </div>
+
+      <div class="msg warn" id="d-saringan" hidden></div>
+      <dl class="kv mt-md" id="d-kv"></dl>
+
+      <div id="d-tindakan">
+        <label id="lbl-catatan">Catatan / sebab
+          <textarea id="d-catatan" maxlength="1000" placeholder="Wajib untuk pulangkan dan tolak. Pemohon akan nampak catatan bila dipulangkan."></textarea>
+        </label>
+        <div class="actions" id="d-butang"></div>
+      </div>
+      <div class="msg" id="msg-tindakan" hidden></div>
+
+      <h2 class="h-sub">Jejak audit</h2>
+      <ol class="trail" id="d-audit"></ol>
+    </div>
+  </div>
+</main>
+
+<footer class="site"><a href="index.html">Borang awam</a></footer>
+
+<script src="assets/config.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/ui.js"></script>
+<script src="assets/staf.js"></script>
+</body>
+</html>
