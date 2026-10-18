@@ -203,6 +203,35 @@ td .sub { display: block; font-size: var(--t-label); color: var(--text-3); margi
 .lencana.PERLU_SEMAK { background: var(--warn-bg); color: var(--warn); }
 .lencana.TIDAK_LAYAK { background: var(--surface-sunk); color: var(--text-2); }
 .lencana.LUAR_SKOP   { background: var(--surface-sunk); color: var(--text-3); }
+
+/* Penanda "diubah oleh guru" di bawah nama murid. Tanpa peraturan desktop
+   ia jadi teks inline yang bercantum terus dengan nama. */
+.diubah {
+  display: block; margin-top: 2px;
+  font-size: var(--t-label); font-weight: 400; color: var(--text-3);
+}
+
+/* Lencana dokumen sengaja digarisi, bukan diisi penuh seperti lencana
+   kelayakan. Dua paksi berbeza; rupa yang sama buat orang sangka dokumen
+   menentukan kelayakan. */
+.lencana.dok-LENGKAP {
+  background: transparent; color: var(--ok); border-color: var(--ok-bg);
+}
+.lencana.dok-TIDAK_LENGKAP {
+  background: transparent; color: var(--warn); border-color: var(--warn-bg);
+}
+.lencana.dok-BELUM {
+  background: transparent; color: var(--text-3); border-color: var(--border);
+}
+
+/* Tajuk kecil dalam kad, untuk memisahkan bahagian tanpa kotak baharu. */
+.sub-tajuk {
+  margin: var(--s6) 0 var(--s1);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--border);
+  font-size: var(--t-head); font-weight: 600; color: var(--text-1);
+}
+.sub-tajuk + .nota { margin-top: 0; margin-bottom: var(--s4); }
 .ikon { width: 1em; height: 1em; flex: 0 0 auto; }
 
 /* ---------- Kawalan ---------- */

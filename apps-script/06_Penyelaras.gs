@@ -38,13 +38,18 @@ function penyelarasRingkasan(token) {
     var hasil = nilaiKelayakan(m, sekolah[String(m.SekolahKod)], konteks);
     var t = String(m.Tahun), kid = String(m.KelasId);
     if (!ikutTahun[t]) ikutTahun[t] = { tahun: t, jumlah: 0, LAYAK: 0,
-      TIDAK_LAYAK: 0, PERLU_SEMAK: 0, LUAR_SKOP: 0, belumDisahkan: 0 };
+      TIDAK_LAYAK: 0, PERLU_SEMAK: 0, LUAR_SKOP: 0,
+      dokLengkap: 0, dokTidakLengkap: 0, dokBelum: 0 };
     if (!ikutKelas[kid]) ikutKelas[kid] = { kelasId: kid, tahun: t,
       namaKelas: String(m.NamaKelas), jumlah: 0, LAYAK: 0, TIDAK_LAYAK: 0,
-      PERLU_SEMAK: 0, LUAR_SKOP: 0, belumDisahkan: 0, guru: '' };
+      PERLU_SEMAK: 0, LUAR_SKOP: 0,
+      dokLengkap: 0, dokTidakLengkap: 0, dokBelum: 0, guru: '' };
+    var sd = _statusDokumen(m);
     [ikutTahun[t], ikutKelas[kid]].forEach(function (b) {
       b.jumlah++; b[hasil.status]++;
-      if (m.Disahkan !== true) b.belumDisahkan++;
+      if (sd === STATUS_DOKUMEN.LENGKAP) b.dokLengkap++;
+      else if (sd === STATUS_DOKUMEN.TIDAK_LENGKAP) b.dokTidakLengkap++;
+      else b.dokBelum++;
     });
   });
 

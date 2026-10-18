@@ -186,20 +186,20 @@ function konteksKelayakan() {
 function ringkasanKelayakan(senaraiMurid, sekolahIkutKod, konteks) {
   var kira = { LAYAK: 0, TIDAK_LAYAK: 0, PERLU_SEMAK: 0, LUAR_SKOP: 0 };
   var laluan = {};
-  var belumDisahkan = 0;
+  var dok = { LENGKAP: 0, TIDAK_LENGKAP: 0, BELUM: 0 };
 
   senaraiMurid.forEach(function (m) {
     var hasil = nilaiKelayakan(m, sekolahIkutKod[String(m.SekolahKod)], konteks);
     kira[hasil.status]++;
     if (hasil.laluan) laluan[hasil.laluan] = (laluan[hasil.laluan] || 0) + 1;
-    if (m.Disahkan !== true) belumDisahkan++;
+    dok[_statusDokumen(m) || 'BELUM']++;
   });
 
   var anggaran = kira.LAYAK * konteks.kadarSehari * konteks.hariPersekolahan;
   return {
     kira: kira,
     laluan: laluan,
-    belumDisahkan: belumDisahkan,
+    dokumen: dok,
     jumlahDinilai: senaraiMurid.length,
     pgk: konteks.pgk,
     kadarSehari: konteks.kadarSehari,

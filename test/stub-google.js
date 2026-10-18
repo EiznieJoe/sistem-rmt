@@ -123,6 +123,7 @@ function buatPersekitaran() {
         if (fmt === 'yy') return String(d.getFullYear()).slice(-2);
         if (fmt === 'yyyy') return String(d.getFullYear());
         if (fmt === 'dd-MM-yyyy') return `${p(d.getDate())}-${p(d.getMonth() + 1)}-${d.getFullYear()}`;
+        if (fmt === 'yyyy-MM-dd') return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
         return d.toISOString();
       }
     },

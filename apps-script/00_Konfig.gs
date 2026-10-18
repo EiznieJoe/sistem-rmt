@@ -65,7 +65,13 @@ var LAJUR = {
     'PendapatanPenjaga1',   // perenggan 3.7 — PIR
     'PendapatanPenjaga2',
     'Tanggungan',           // perenggan 3.6 — ibu bapa/penjaga + anak-anak
-    'Disahkan',             // guru kelas sudah semak?
+    /*
+     * LEGASI — pengesahan guru dibuang, digantikan penghantaran dokumen.
+     * Lajur dikekalkan kerana memadamnya akan menggeser setiap kepala
+     * selepasnya sambil baris data kekal, menyebabkan kepala duduk atas
+     * data yang salah. Tiada kod membaca atau menulisnya lagi.
+     */
+    'Disahkan',
     'DisahkanOleh',
     'DisahkanPada',
     'MedanDiubah',          // senarai medan yang guru ubah, dipisah koma
@@ -73,7 +79,22 @@ var LAJUR = {
     'Sesi',                 // sesi/tahun import ini
     'Aktif',                // false = tiada dalam import terkini (bertukar sekolah)
     'DiimportPada',
-    'DikemaskiniPada'
+    'DikemaskiniPada',
+
+    /*
+     * Penghantaran dokumen sokongan. DITAMBAH DI HUJUNG dengan sengaja.
+     *
+     * Lajur dipetakan mengikut nama kepala, tetapi pasang() menulis kepala
+     * ke kedudukan 1..n. Menyelit lajur di tengah akan menggeser setiap
+     * kepala selepasnya sambil baris data kekal di tempat asal — kepala
+     * baharu akan duduk atas data lama. Menambah di hujung tidak menggeser
+     * apa-apa.
+     */
+    'StatusDokumen',        // '' | LENGKAP | TIDAK_LENGKAP
+    'TarikhHantarDokumen',
+    'CatatanDokumen',
+    'DokumenOleh',
+    'DokumenPada'
   ],
 
   Audit: ['Masa', 'IdMurid', 'PelakuEmel', 'PelakuLabel', 'Tindakan',
@@ -88,6 +109,21 @@ var LAJUR = {
   ImportLog: ['Masa', 'PelakuEmel', 'BarisDibaca', 'Baharu', 'Dikemaskini',
               'Dilangkau', 'Konflik', 'Amaran']
 };
+
+/**
+ * Status penghantaran dokumen sokongan.
+ *
+ * Ini TIDAK mempengaruhi kelayakan. Kelayakan ditentukan oleh kriteria SPK
+ * semata-mata; penghantaran dokumen ialah lapisan pentadbiran di atasnya.
+ * Murid layak yang belum hantar dokumen tetap layak.
+ */
+var STATUS_DOKUMEN = {
+  BELUM:         '',
+  LENGKAP:       'LENGKAP',
+  TIDAK_LENGKAP: 'TIDAK_LENGKAP'
+};
+
+var STATUS_DOKUMEN_SAH = ['', 'LENGKAP', 'TIDAK_LENGKAP'];
 
 /** Medan yang guru kelas dibenarkan ubah. Selain ini, import yang menang. */
 var MEDAN_BOLEH_DIUBAH = [

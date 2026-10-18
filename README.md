@@ -1,8 +1,8 @@
 # Sistem Pengurusan Kelayakan RMT
 
-Import senarai murid dari iDME, guru kelas membetulkan yang perlu, sistem
-mengira kelayakan RMT ikut pekeliling, penyelaras menyediakan senarai untuk
-JBPS.
+Import senarai murid dari iDME, guru kelas membetulkan yang perlu dan
+merekod penghantaran dokumen, sistem mengira kelayakan RMT ikut pekeliling,
+penyelaras menyediakan senarai untuk JBPS.
 
 **Rujukan tunggal kelayakan:** Surat Pekeliling Kewangan Bil. 1 Tahun 2026,
 Program Rancangan Makanan Tambahan dan Program Susu Sekolah
@@ -97,6 +97,44 @@ untuk penyelaras tengok — bukan menimpanya senyap-senyap. Medan struktur
 Lajur dipadankan ikut **nama kepala**, bukan kedudukan. Kalau iDME menyusun
 semula atau menambah lajur, import tetap berfungsi. Kalau kepala wajib
 hilang, import berhenti dan menamakannya — ia tidak meneka.
+
+---
+
+## Penghantaran dokumen sokongan
+
+Guru kelas merekod sama ada penjaga sudah hantar dokumen, bila, dan apa yang
+kurang:
+
+| Medan | Nilai |
+|---|---|
+| `StatusDokumen` | kosong (belum hantar), `LENGKAP`, atau `TIDAK_LENGKAP` |
+| `TarikhHantarDokumen` | `YYYY-MM-DD`; wajib bila status diisi, tidak boleh masa hadapan |
+| `CatatanDokumen` | teks bebas, maksimum 300 aksara |
+
+**Ini tidak mempengaruhi kelayakan.** Kelayakan ditentukan oleh kriteria SPK
+sahaja. Murid layak yang belum hantar dokumen tetap layak — yang berubah
+hanya rekod pentadbiran. Dua paksi ini sengaja dipisahkan, termasuk pada
+lencananya: lencana kelayakan diisi penuh, lencana dokumen digarisi.
+
+Rekod dokumen tidak ditanda dalam `MedanDiubah`, kerana ia bukan pembetulan
+data iDME. Import semula tidak menyentuhnya dan tidak melaporkannya sebagai
+percanggahan.
+
+Menetapkan status kembali kepada "belum hantar" membuang tarikh, catatan dan
+jejak pegawai sekali — supaya tiada rekod separuh yang mengelirukan.
+
+### Lajur legasi
+
+Pengesahan guru (`Disahkan`, `DisahkanOleh`, `DisahkanPada`) telah dibuang
+dan digantikan penghantaran dokumen. Lajurnya **dikekalkan dalam helaian**
+walaupun tiada kod membacanya.
+
+Sebabnya: `pasang()` menulis kepala ke kedudukan 1..n. Memadam tiga lajur di
+tengah akan menggeser setiap kepala selepasnya sambil baris data kekal di
+tempat asal — kepala baharu akan duduk atas data yang salah. Dengan 1,395
+baris data hidup, itu risiko yang tidak berbaloi untuk tiga lajur kosong.
+
+Atas sebab yang sama, lajur dokumen ditambah di **hujung** senarai.
 
 ---
 

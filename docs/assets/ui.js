@@ -42,6 +42,14 @@
     PERLU_SEMAK: "Perlu semak", LUAR_SKOP: "Luar skop"
   };
 
+  /* Kunci kosong bermakna belum hantar, jadi ia dipetakan di bawah "BELUM"
+     supaya pemanggil boleh tulis LABEL_DOKUMEN[status || "BELUM"]. */
+  var LABEL_DOKUMEN = {
+    BELUM: "Belum hantar",
+    LENGKAP: "Lengkap",
+    TIDAK_LENGKAP: "Tidak lengkap"
+  };
+
   /* Nama medan dan kunci tetapan ialah pengenal dalaman. Pengguna tidak
      sepatutnya nampak PendapatanPenjaga1 atau pgk_miskin_tegar. */
   var LABEL_MEDAN = {
@@ -72,6 +80,25 @@
     if (IKON_STATUS[status]) anak.push(ikon(IKON_STATUS[status]));
     anak.push(LABEL[status] || status);
     return el("span", { class: "lencana " + status }, anak);
+  }
+
+  /* Lencana dokumen berasingan daripada lencana kelayakan: dua paksi
+     berbeza, dan mencampurnya buat orang sangka dokumen menentukan
+     kelayakan. */
+  function lencanaDokumen(status) {
+    var k = status || "BELUM";
+    var anak = [];
+    if (k === "LENGKAP") anak.push(ikon("good"));
+    else if (k === "TIDAK_LENGKAP") anak.push(ikon("warning"));
+    anak.push(LABEL_DOKUMEN[k] || k);
+    return el("span", { class: "lencana dok-" + k }, anak);
+  }
+
+  /* 'YYYY-MM-DD' -> 'DD/MM/YYYY' tanpa melalui Date, supaya tarikh tidak
+     bergeser sehari mengikut zon waktu pelayar. */
+  function tarikhPendek(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ""));
+    return m ? m[3] + "/" + m[2] + "/" + m[1] : "\u2014";
   }
 
   function tarikh(iso, denganMasa) {
@@ -112,7 +139,8 @@
   }
 
   window.UI = { el: el, ikon: ikon, lencana: lencana, LABEL: LABEL,
+                lencanaDokumen: lencanaDokumen, LABEL_DOKUMEN: LABEL_DOKUMEN,
                 namaMedan: namaMedan, namaTetapan: namaTetapan,
-                tarikh: tarikh, rm: rm, nombor: nombor,
+                tarikh: tarikh, tarikhPendek: tarikhPendek, rm: rm, nombor: nombor,
                 papar: papar, sorok: sorok, muatTurunCsv: muatTurunCsv };
 })();

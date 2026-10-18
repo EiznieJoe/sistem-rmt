@@ -254,12 +254,72 @@ semak('percanggahan dilaporkan, bukan ditimpa senyap', imp.konflik === 1, JSON.s
 semak('medan bukan-guru tetap dikemas kini dari import',
   jalankan("String(cariBaris(HELAIAN.MURID,'IdMurid','100001').Nama)") === 'Ahmad Satu');
 
-console.log('\n== Pengesahan guru ==');
-semak('sahkan seorang murid',
-  panggil({ tindakan: 'sahkanMurid', token: T1, data: { idMurid: '100001' } }).data.disahkan === true);
-r = panggil({ tindakan: 'sahkanKelas', token: T1, data: { kelasId: 'TAHUN SATU | GIGIH' } });
-semak('sahkan kelas melangkau murid PERLU_SEMAK',
-  r.data.dilangkau === 1 && r.data.disahkan === 7, JSON.stringify(r.data));
+console.log('\n== Penghantaran dokumen ==');
+const semalam = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+
+r = panggil({ tindakan: 'kemasDokumen', token: T1, data: {
+  idMurid: '100001', status: 'LENGKAP', tarikh: semalam, catatan: 'Slip gaji + surat sumpah' } });
+semak('guru rekod dokumen lengkap', r.data.status === 'LENGKAP' &&
+  r.data.tarikh === semalam, JSON.stringify(r.data));
+
+r = panggil({ tindakan: 'kemasDokumen', token: T1, data: {
+  idMurid: '100002', status: 'TIDAK_LENGKAP', tarikh: semalam, catatan: 'Slip gaji tiada' } });
+semak('guru rekod dokumen tidak lengkap', r.data.status === 'TIDAK_LENGKAP');
+
+semak('status tidak sah ditolak',
+  !!panggil({ tindakan: 'kemasDokumen', token: T1, data: {
+    idMurid: '100003', status: 'SEPARUH', tarikh: semalam } }).ralat);
+semak('status diisi tetapi tarikh kosong ditolak',
+  /tarikh/i.test(panggil({ tindakan: 'kemasDokumen', token: T1, data: {
+    idMurid: '100003', status: 'LENGKAP', tarikh: '' } }).ralat || ''));
+semak('tarikh masa hadapan ditolak',
+  !!panggil({ tindakan: 'kemasDokumen', token: T1, data: { idMurid: '100003',
+    status: 'LENGKAP',
+    tarikh: new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10) } }).ralat);
+semak('bentuk tarikh salah ditolak',
+  !!panggil({ tindakan: 'kemasDokumen', token: T1, data: {
+    idMurid: '100003', status: 'LENGKAP', tarikh: '18/10/2026' } }).ralat);
+
+semak('guru kelas lain tidak boleh sentuh murid bukan kelasnya',
+  !!panggil({ tindakan: 'kemasDokumen', token: T2, data: {
+    idMurid: '100001', status: 'LENGKAP', tarikh: semalam } }).ralat);
+
+semak('dokumen TIDAK mengubah kelayakan',
+  (() => { const sebelum = panggil({ tindakan: 'senaraiMurid', token: T1,
+             data: { kelasId: 'TAHUN SATU | GIGIH' } })
+             .data.murid.find((m) => m.idMurid === '100001').kelayakan;
+           panggil({ tindakan: 'kemasDokumen', token: T1, data: {
+             idMurid: '100001', status: 'TIDAK_LENGKAP', tarikh: semalam } });
+           const selepas = panggil({ tindakan: 'senaraiMurid', token: T1,
+             data: { kelasId: 'TAHUN SATU | GIGIH' } })
+             .data.murid.find((m) => m.idMurid === '100001').kelayakan;
+           return sebelum === selepas; })());
+
+semak('kosongkan status membuang tarikh, catatan dan jejak pegawai',
+  (() => { panggil({ tindakan: 'kemasDokumen', token: T1, data: {
+             idMurid: '100002', status: '', tarikh: '', catatan: '' } });
+           const m = jalankan("cariBaris(HELAIAN.MURID,'IdMurid','100002')");
+           return !String(m.StatusDokumen || '') && !String(m.TarikhHantarDokumen || '') &&
+                  !String(m.CatatanDokumen || '') && !String(m.DokumenOleh || ''); })());
+
+semak('perubahan dokumen direkod dalam jejak audit',
+  jalankan(`bacaSemua(HELAIAN.AUDIT).some(function(a){
+    return a.Tindakan === 'GURU_DOKUMEN' && String(a.IdMurid) === '100001';
+  })`));
+
+semak('ringkasan kelas mengira ikut status dokumen',
+  (() => { const k = panggil({ tindakan: 'kelasSaya', token: T1 })
+             .data.kelas.find((k) => k.kelasId === 'TAHUN SATU | GIGIH').ringkasan;
+           return k.dokLengkap + k.dokTidakLengkap + k.dokBelum === k.jumlah; })());
+
+semak('import semula tidak memadam rekod dokumen',
+  (() => { panggil({ tindakan: 'kemasDokumen', token: T1, data: {
+             idMurid: '100001', status: 'LENGKAP', tarikh: semalam, catatan: 'kekal' } });
+           tampalImport(matriks(MURID));
+           jalankan('importDariHelaian()');
+           const m = jalankan("cariBaris(HELAIAN.MURID,'IdMurid','100001')");
+           return String(m.StatusDokumen) === 'LENGKAP' &&
+                  String(m.CatatanDokumen) === 'kekal'; })());
 
 console.log('\n== Papan pemuka penyelaras ==');
 r = panggil({ tindakan: 'ringkasan', token: TS });

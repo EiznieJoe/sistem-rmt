@@ -48,14 +48,34 @@ function _paparMurid(m, sekolahIkutKod, konteks) {
     kelayakan: hasil.status,
     laluan: hasil.laluan,
     sebab: hasil.sebab,
-    disahkan: m.Disahkan === true,
-    disahkanOleh: String(m.DisahkanOleh || ''),
+    statusDokumen: _statusDokumen(m),
+    tarikhHantarDokumen: _tarikhIso(m.TarikhHantarDokumen),
+    catatanDokumen: String(m.CatatanDokumen || ''),
+    dokumenOleh: String(m.DokumenOleh || ''),
     medanDiubah: String(m.MedanDiubah || '').split(',').map(function (s) {
       return s.trim();
     }).filter(Boolean),
     catatanGuru: String(m.CatatanGuru || ''),
     aktif: m.Aktif !== false
   };
+}
+
+/**
+ * Nilai StatusDokumen yang tidak dikenali dibaca sebagai "belum hantar",
+ * bukan dibiarkan bocor ke UI. Baris yang diimport sebelum lajur ini wujud
+ * akan kosong, dan itu memang bermakna belum hantar.
+ */
+function _statusDokumen(m) {
+  var v = String(m.StatusDokumen || '').trim().toUpperCase();
+  return STATUS_DOKUMEN_SAH.indexOf(v) >= 0 ? v : STATUS_DOKUMEN.BELUM;
+}
+
+/** Tarikh -> 'YYYY-MM-DD' untuk <input type="date">. Kosong kekal kosong. */
+function _tarikhIso(nilai) {
+  if (!nilai) return '';
+  var d = (nilai instanceof Date) ? nilai : new Date(nilai);
+  if (isNaN(d.getTime())) return '';
+  return Utilities.formatDate(d, 'Asia/Kuala_Lumpur', 'yyyy-MM-dd');
 }
 
 function _sekolahIkutKod() {
@@ -85,12 +105,16 @@ function guruKelasSaya(token) {
   semua.forEach(function (m) {
     var kid = String(m.KelasId);
     if (!ikutKelas[kid]) {
-      ikutKelas[kid] = { kelasId: kid, jumlah: 0, belumDisahkan: 0,
+      ikutKelas[kid] = { kelasId: kid, jumlah: 0,
+                         dokLengkap: 0, dokTidakLengkap: 0, dokBelum: 0,
                          LAYAK: 0, TIDAK_LAYAK: 0, PERLU_SEMAK: 0, LUAR_SKOP: 0 };
     }
     var b = ikutKelas[kid];
     b.jumlah++;
-    if (m.Disahkan !== true) b.belumDisahkan++;
+    var sd = _statusDokumen(m);
+    if (sd === STATUS_DOKUMEN.LENGKAP) b.dokLengkap++;
+    else if (sd === STATUS_DOKUMEN.TIDAK_LENGKAP) b.dokTidakLengkap++;
+    else b.dokBelum++;
     b[nilaiKelayakan(m, sekolah[String(m.SekolahKod)], konteks).status]++;
   });
 
@@ -106,8 +130,8 @@ function guruKelasSaya(token) {
         namaKelas: String(k.NamaKelas),
         guruNamaImport: String(k.GuruNamaImport || ''),
         ringkasan: ikutKelas[String(k.KelasId)] ||
-          { jumlah: 0, belumDisahkan: 0, LAYAK: 0, TIDAK_LAYAK: 0,
-            PERLU_SEMAK: 0, LUAR_SKOP: 0 }
+          { jumlah: 0, dokLengkap: 0, dokTidakLengkap: 0, dokBelum: 0,
+            LAYAK: 0, TIDAK_LAYAK: 0, PERLU_SEMAK: 0, LUAR_SKOP: 0 }
       };
     })
   };
@@ -196,56 +220,71 @@ function guruKemasMurid(token, data) {
   });
 }
 
-/** Guru mengesahkan rekod seorang murid — data betul, sama ada diubah atau tidak. */
-function guruSahkanMurid(token, data) {
+/**
+ * Guru mengemas kini penghantaran dokumen sokongan seorang murid.
+ *
+ * Berasingan daripada guruKemasMurid() kerana ini bukan pembetulan data
+ * iDME: tiada MedanDiubah ditanda, jadi import semula tidak akan melaporkan
+ * konflik untuk medan ini, dan status dokumen tidak pernah menimpa nilai
+ * yang dibawa import.
+ *
+ * Tidak menyentuh kelayakan. Murid layak yang belum hantar dokumen tetap
+ * layak — yang berubah hanyalah rekod pentadbiran.
+ */
+function guruKemasDokumen(token, data) {
   var sesi = perluAuth(token, [PERANAN.GURU, PERANAN.PENYELARAS]);
+
+  var status = String(data.status || '').trim().toUpperCase();
+  if (STATUS_DOKUMEN_SAH.indexOf(status) < 0) {
+    throw Ralat('Status dokumen tidak sah.');
+  }
+
+  var tarikh = String(data.tarikh || '').trim();
+  if (tarikh && !/^\d{4}-\d{2}-\d{2}$/.test(tarikh)) {
+    throw Ralat('Tarikh mesti dalam bentuk YYYY-MM-DD.');
+  }
+  if (status !== STATUS_DOKUMEN.BELUM && !tarikh) {
+    throw Ralat('Sila isi tarikh hantar.');
+  }
+  if (tarikh) {
+    var d = new Date(tarikh + 'T00:00:00');
+    if (isNaN(d.getTime())) throw Ralat('Tarikh tidak sah.');
+    // Esok dibenarkan untuk zon waktu; selain itu tarikh hadapan ditolak.
+    var esok = new Date(); esok.setDate(esok.getDate() + 1);
+    if (d > esok) throw Ralat('Tarikh hantar tidak boleh pada masa hadapan.');
+  }
+
+  var catatan = bersihTeks(data.catatan, 300);
+
   return dgnKunci(function () {
     var m = _murid(sesi, data.idMurid);
-    var sahkan = data.sahkan !== false;
-    kemasBaris(HELAIAN.MURID, m._baris, {
-      Disahkan: sahkan,
-      DisahkanOleh: sahkan ? sesi.emel : '',
-      DisahkanPada: sahkan ? new Date() : '',
-      DikemaskiniPada: new Date()
-    });
-    audit(String(m.IdMurid), sahkan ? 'GURU_SAHKAN' : 'GURU_BATAL_SAHKAN', '', null, sesi);
-    return { disahkan: sahkan };
-  });
-}
-
-/**
- * Sahkan seluruh kelas sekali gus — "data import betul semua".
- * Murid yang berstatus PERLU_SEMAK sengaja TIDAK disahkan: itulah murid
- * yang memang perlu guru tengok satu-satu.
- */
-function guruSahkanKelas(token, data) {
-  var sesi = perluAuth(token, [PERANAN.GURU, PERANAN.PENYELARAS]);
-  var kelas = _kelasSaya(sesi, data.kelasId);
-  var konteks = konteksKelayakan();
-  var sekolah = _sekolahIkutKod();
-
-  return dgnKunci(function () {
-    var murid = bacaSemua(HELAIAN.MURID).filter(function (m) {
-      return m.Aktif !== false &&
-             String(m.KelasId).toUpperCase() === String(kelas.KelasId).toUpperCase();
-    });
-    var bil = 0, dilangkau = 0;
-    murid.forEach(function (m) {
-      if (m.Disahkan === true) return;
-      var hasil = nilaiKelayakan(m, sekolah[String(m.SekolahKod)], konteks);
-      if (hasil.status === STATUS_KELAYAKAN.PERLU_SEMAK) { dilangkau++; return; }
-      kemasBaris(HELAIAN.MURID, m._baris, {
-        Disahkan: true, DisahkanOleh: sesi.emel,
-        DisahkanPada: new Date(), DikemaskiniPada: new Date()
-      });
-      bil++;
-    });
-    audit('', 'GURU_SAHKAN_KELAS', String(kelas.KelasId),
-          { disahkan: bil, dilangkau: dilangkau }, sesi);
-    return {
-      disahkan: bil, dilangkau: dilangkau,
-      nota: dilangkau ? dilangkau + ' murid berstatus "Perlu semak" tidak disahkan ' +
-                        'secara pukal — sila semak seorang demi seorang.' : ''
+    var lama = {
+      status: _statusDokumen(m),
+      tarikh: _tarikhIso(m.TarikhHantarDokumen),
+      catatan: String(m.CatatanDokumen || '')
     };
+    if (lama.status === status && lama.tarikh === tarikh &&
+        lama.catatan === catatan) {
+      return { ralat: 'Tiada perubahan.' };
+    }
+
+    // Status dikosongkan semula = rekod penghantaran ditarik balik penuh.
+    var kosong = status === STATUS_DOKUMEN.BELUM;
+    kemasBaris(HELAIAN.MURID, m._baris, {
+      StatusDokumen:       status,
+      TarikhHantarDokumen: kosong ? '' : tarikh,
+      CatatanDokumen:      kosong ? '' : catatan,
+      DokumenOleh:         kosong ? '' : sesi.emel,
+      DokumenPada:         kosong ? '' : new Date(),
+      DikemaskiniPada:     new Date()
+    });
+
+    audit(String(m.IdMurid), 'GURU_DOKUMEN', status || 'BELUM_HANTAR',
+          { dari: lama, ke: { status: status, tarikh: tarikh, catatan: catatan } },
+          sesi);
+
+    return { status: status, tarikh: kosong ? '' : tarikh,
+             catatan: kosong ? '' : catatan };
   });
 }
+

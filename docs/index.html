@@ -90,7 +90,7 @@
         <div class="jalur" id="jalur"></div>
         <div class="kemajuan">
           <div class="atas">
-            <span>Pengesahan guru kelas</span>
+            <span>Dokumen sokongan diterima</span>
             <span id="kemajuan-teks">&mdash;</span>
           </div>
           <div class="bar"><i id="kemajuan-bar"></i></div>
@@ -108,7 +108,8 @@
             <th class="num">Murid</th>
             <th class="num">Layak</th>
             <th class="num">Perlu semak</th>
-            <th class="num">Disahkan</th>
+            <th class="num">Dok. lengkap</th>
+            <th class="num">Belum hantar</th>
             <th class="lajur-sembunyi">Guru kelas</th>
           </tr></thead>
           <tbody id="jadual-kelas"></tbody>
@@ -175,13 +176,12 @@
             <select id="f-murid">
               <option value="">Semua murid</option>
               <option value="PERLU_SEMAK">Perlu semak sahaja</option>
-              <option value="BELUM_SAH">Belum disahkan sahaja</option>
+              <option value="DOK_BELUM">Belum hantar dokumen</option>
+              <option value="DOK_TIDAK_LENGKAP">Dokumen tidak lengkap</option>
+              <option value="DOK_LENGKAP">Dokumen lengkap</option>
               <option value="LAYAK">Layak sahaja</option>
               <option value="TIDAK_LAYAK">Tidak layak sahaja</option>
             </select>
-          </div>
-          <div class="butang">
-            <button type="button" id="btn-sahkan-kelas">Sahkan semua yang jelas</button>
           </div>
         </div>
         <div class="gulung">
@@ -190,7 +190,8 @@
               <th>Nama</th>
               <th class="num lajur-sembunyi">Penjaga 1</th>
               <th class="num lajur-sembunyi">Penjaga 2</th>
-              <th class="num">PIR</th><th>Kelayakan</th><th>Sah</th>
+              <th class="num">PIR</th><th>Kelayakan</th>
+              <th>Dokumen</th><th class="lajur-sembunyi">Tarikh hantar</th>
             </tr></thead>
             <tbody id="jadual-murid-guru"></tbody>
           </table>
@@ -235,13 +236,33 @@
         </div>
         <div class="medan"><label for="e-catatan">Catatan</label>
           <textarea id="e-catatan" maxlength="500" rows="2"
-            placeholder="Contoh: disahkan dengan penjaga pada 20/10/2026"></textarea></div>
+            placeholder="Contoh: pendapatan disemak dengan penjaga"></textarea></div>
         <div class="butang">
           <button type="button" class="utama" id="btn-simpan">Simpan</button>
-          <button type="button" id="btn-sahkan">Tandakan disahkan</button>
           <button type="button" id="btn-tutup">Tutup</button>
         </div>
         <div class="mesej" id="msg-edit" hidden></div>
+
+        <h2 class="sub-tajuk">Dokumen sokongan</h2>
+        <p class="nota">Rekod ini tidak mengubah kelayakan murid. Ia untuk
+          menjejak siapa sudah hantar dokumen.</p>
+        <div class="baris2">
+          <div class="medan"><label for="d-status">Penghantaran</label>
+            <select id="d-status">
+              <option value="">Belum hantar</option>
+              <option value="LENGKAP">Dokumen lengkap</option>
+              <option value="TIDAK_LENGKAP">Dokumen tidak lengkap</option>
+            </select></div>
+          <div class="medan"><label for="d-tarikh">Tarikh hantar</label>
+            <input id="d-tarikh" type="date"></div>
+        </div>
+        <div class="medan"><label for="d-catatan">Catatan dokumen</label>
+          <textarea id="d-catatan" maxlength="300" rows="2"
+            placeholder="Contoh: slip gaji ada, surat sumpah belum"></textarea></div>
+        <div class="butang">
+          <button type="button" class="utama" id="btn-simpan-dokumen">Simpan dokumen</button>
+        </div>
+        <div class="mesej" id="msg-dokumen" hidden></div>
         <h2 class="nota">Jejak audit</h2>
         <ol class="jejak" id="jejak"></ol>
       </div>

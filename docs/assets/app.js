@@ -142,7 +142,7 @@
       jalur.textContent = "";
       [["Tidak layak", UI.nombor(r.kira.TIDAK_LAYAK), false],
        ["Perlu semak", UI.nombor(r.kira.PERLU_SEMAK), r.kira.PERLU_SEMAK > 0],
-       ["Belum disahkan", UI.nombor(r.belumDisahkan), false]
+       ["Belum hantar dokumen", UI.nombor(r.dokumen.BELUM), false]
       ].forEach(function (t) {
         jalur.appendChild(el("div", null, [
           el("div", { class: "label" }, (t[2] ? [UI.ikon("warning")] : []).concat([t[0]])),
@@ -150,12 +150,14 @@
         ]));
       });
 
-      /* Kemajuan pengesahan — kerja ini sebenarnya satu pungutan. */
-      var sah = dinilai - r.belumDisahkan;
-      var peratus = dinilai ? Math.round((sah / dinilai) * 100) : 0;
+      /* Kemajuan pungutan dokumen. "Diterima" termasuk yang tidak lengkap:
+         dokumen sudah masuk, cuma ada yang kurang. Yang belum hantar langsung
+         itulah kerja yang tinggal. */
+      var diterima = r.dokumen.LENGKAP + r.dokumen.TIDAK_LENGKAP;
+      var peratus = dinilai ? Math.round((diterima / dinilai) * 100) : 0;
       $("kemajuan-teks").textContent = "";
       $("kemajuan-teks").appendChild(el("b",
-        { text: UI.nombor(sah) + " / " + UI.nombor(dinilai) }));
+        { text: UI.nombor(diterima) + " / " + UI.nombor(dinilai) }));
       $("kemajuan-teks").appendChild(document.createTextNode(" \u00b7 " + peratus + "%"));
       $("kemajuan-bar").style.width = peratus + "%";
 
@@ -171,8 +173,10 @@
           el("td", { class: "num", "data-label": "Layak", text: UI.nombor(k.LAYAK) }),
           el("td", { class: "num", "data-label": "Perlu semak",
             text: k.PERLU_SEMAK ? UI.nombor(k.PERLU_SEMAK) : "\u2014" }),
-          el("td", { class: "num", "data-label": "Disahkan",
-            text: UI.nombor(k.jumlah - k.belumDisahkan) + " / " + UI.nombor(k.jumlah) }),
+          el("td", { class: "num", "data-label": "Dok. lengkap",
+            text: UI.nombor(k.dokLengkap) }),
+          el("td", { class: "num", "data-label": "Belum hantar",
+            text: k.dokBelum ? UI.nombor(k.dokBelum) : "\u2014" }),
           el("td", { class: "lajur-sembunyi", "data-label": "Guru", text: k.guru })
         ]));
       });
@@ -274,12 +278,15 @@
     if (!senaraiSemasa.length) return papar($("msg-senarai"), "err", "Papar senarai dahulu.");
     var kepala = ["Nama", "No. Pengenalan", "Jenis Pengenalan", "Tahun", "Kelas",
       "Pendapatan Penjaga 1", "Pendapatan Penjaga 2", "PIR", "Tanggungan", "Per kapita",
-      "Kelayakan", "Laluan (SPK 1/2026)", "Sebab", "Disahkan oleh"];
+      "Kelayakan", "Laluan (SPK 1/2026)", "Sebab",
+      "Dokumen", "Tarikh hantar", "Catatan dokumen"];
     UI.muatTurunCsv("senarai-rmt-" + new Date().toISOString().slice(0, 10) + ".csv",
       [kepala].concat(senaraiSemasa.map(function (m) {
         return [m.nama, m.noPengenalan, m.jenisPengenalan, m.tahun, m.namaKelas,
           m.pendapatanPenjaga1, m.pendapatanPenjaga2, m.pir, m.tanggungan, m.perKapita,
-          UI.LABEL[m.kelayakan] || m.kelayakan, m.laluan, m.sebab, m.disahkanOleh];
+          UI.LABEL[m.kelayakan] || m.kelayakan, m.laluan, m.sebab,
+          UI.LABEL_DOKUMEN[m.statusDokumen || "BELUM"],
+          m.tarikhHantarDokumen, m.catatanDokumen];
       })));
     papar($("msg-senarai"), "warn",
       "Fail CSV mengandungi data peribadi murid. Simpan dalam peranti sekolah sahaja.");
@@ -339,14 +346,14 @@
     var k = { LAYAK: 0, TIDAK_LAYAK: 0, PERLU_SEMAK: 0 }, belum = 0;
     muridKelas.forEach(function (m) {
       if (k[m.kelayakan] !== undefined) k[m.kelayakan]++;
-      if (!m.disahkan) belum++;
+      if (!m.statusDokumen) belum++;
     });
     var wrap = $("ringkas-kelas");
     wrap.textContent = "";
     [[k.LAYAK, "layak", "baik"],
      [k.TIDAK_LAYAK, "tidak layak", ""],
      [k.PERLU_SEMAK, "perlu semak", k.PERLU_SEMAK ? "amaran" : ""],
-     [belum, "belum disahkan", ""]
+     [belum, "belum hantar dokumen", belum ? "amaran" : ""]
     ].forEach(function (t) {
       wrap.appendChild(el("div", null, [
         el("span", { class: "n " + (t[2] || ""), text: UI.nombor(t[0]) }),
@@ -358,7 +365,12 @@
   function ditapisMurid() {
     var f = $("f-murid").value;
     if (!f) return muridKelas;
-    if (f === "BELUM_SAH") return muridKelas.filter(function (m) { return !m.disahkan; });
+    if (f.indexOf("DOK_") === 0) {
+      var mahu = f === "DOK_BELUM" ? "" : f.slice(4);
+      return muridKelas.filter(function (m) {
+        return (m.statusDokumen || "") === mahu;
+      });
+    }
     return muridKelas.filter(function (m) { return m.kelayakan === f; });
   }
 
@@ -393,9 +405,9 @@
             : el("span", { class: "sub", text: "pk " + UI.rm(m.perKapita) })
         ]),
         el("td", { "data-label": "Kelayakan" }, [UI.lencana(m.kelayakan)]),
-        el("td", { class: "sah", "data-label": "Sah" }, [m.disahkan
-          ? el("span", { class: "tanda ok", title: "Disahkan", text: "\u2713" })
-          : el("span", { class: "tanda", title: "Belum disahkan", text: "\u2013" })])
+        el("td", { "data-label": "Dokumen" }, [UI.lencanaDokumen(m.statusDokumen)]),
+        el("td", { class: "lajur-sembunyi", "data-label": "Tarikh hantar",
+          text: m.tarikhHantarDokumen ? UI.tarikhPendek(m.tarikhHantarDokumen) : "\u2014" })
       ]);
       tr.onclick = function () { bukaMurid(m); };
       tr.onkeydown = function (ev) {
@@ -404,16 +416,6 @@
       tb.appendChild(tr);
     });
   }
-
-  $("btn-sahkan-kelas").onclick = function () {
-    if (!kelasAktif) return;
-    if (!window.confirm("Sahkan semua murid " + kelasAktif.kelasId +
-        " yang datanya lengkap? Murid 'Perlu semak' tidak akan disahkan.")) return;
-    RMT.panggil("sahkanKelas", { kelasId: kelasAktif.kelasId }).then(function (d) {
-      papar($("msg-kelas"), "ok", d.disahkan + " murid disahkan. " + (d.nota || ""));
-      bukaKelas(kelasAktif.kelasId);
-    }).catch(function (e) { papar($("msg-kelas"), "err", e.message); });
-  };
 
   function bukaMurid(m) {
     muridAktif = m;
@@ -432,7 +434,8 @@
      ["Per kapita", m.perKapita == null
         ? "\u2014 (tidak dirujuk \u2014 PIR sudah lulus, atau had belum ditetapkan)"
         : UI.rm(m.perKapita)],
-     ["Disahkan oleh", m.disahkanOleh || "—"]
+     ["Dokumen", UI.LABEL_DOKUMEN[m.statusDokumen || "BELUM"] +
+        (m.tarikhHantarDokumen ? " \u00b7 " + UI.tarikhPendek(m.tarikhHantarDokumen) : "")]
     ].forEach(function (p) {
       kv.appendChild(el("dt", { text: p[0] }));
       kv.appendChild(el("dd", { text: String(p[1]) }));
@@ -440,7 +443,7 @@
 
     var mk = $("msg-kelayakan");
     mk.hidden = false;
-    mk.className = "msg " + (m.kelayakan === "LAYAK" ? "ok"
+    mk.className = "mesej " + (m.kelayakan === "LAYAK" ? "ok"
       : m.kelayakan === "PERLU_SEMAK" ? "warn" : "info");
     mk.textContent = (UI.LABEL[m.kelayakan] || m.kelayakan) +
       (m.laluan ? " melalui perenggan " + m.laluan : "") + " — " + m.sebab;
@@ -453,7 +456,10 @@
     $("e-asrama").value = m.statusAsrama ? "YA" : "";
     $("e-oku").value = m.statusOku ? "YA" : "";
     $("e-catatan").value = m.catatanGuru || "";
-    $("btn-sahkan").textContent = m.disahkan ? "Batalkan pengesahan" : "Tandakan disahkan";
+    $("d-status").value = m.statusDokumen || "";
+    $("d-tarikh").value = m.tarikhHantarDokumen || "";
+    $("d-catatan").value = m.catatanDokumen || "";
+    sorok($("msg-dokumen"));
 
     var ol = $("jejak");
     ol.textContent = "";
@@ -497,21 +503,42 @@
       .catch(function (e) { papar($("msg-edit"), "err", e.message); });
   };
 
-  $("btn-sahkan").onclick = function () {
+  $("btn-simpan-dokumen").onclick = function () {
     if (!muridAktif) return;
-    RMT.panggil("sahkanMurid", { idMurid: muridAktif.idMurid, sahkan: !muridAktif.disahkan })
-      .then(function () {
-        papar($("msg-edit"), "ok", "Dikemas kini.");
-        var id = muridAktif.idMurid;
-        RMT.panggil("senaraiMurid", { kelasId: kelasAktif.kelasId }).then(function (d) {
-          muridKelas = d.murid;
+    var status = $("d-status").value;
+    var tarikh = $("d-tarikh").value;
+
+    // Semakan di pelayar hanya untuk mesej segera; pelayan tetap menyemak.
+    if (status && !tarikh) {
+      papar($("msg-dokumen"), "err", "Sila isi tarikh hantar.");
+      return;
+    }
+    if (!status && (tarikh || $("d-catatan").value)) {
+      if (!window.confirm("Status \u2018Belum hantar\u2019 akan membuang " +
+          "tarikh dan catatan dokumen murid ini. Teruskan?")) return;
+    }
+
+    papar($("msg-dokumen"), "info", "Menyimpan\u2026");
+    RMT.panggil("kemasDokumen", {
+      idMurid: muridAktif.idMurid, status: status, tarikh: tarikh,
+      catatan: $("d-catatan").value
+    }).then(function (d) {
+      if (d.ralat) { papar($("msg-dokumen"), "info", d.ralat); return; }
+      papar($("msg-dokumen"), "ok", "Rekod dokumen dikemas kini.");
+      var id = muridAktif.idMurid;
+      return RMT.panggil("senaraiMurid", { kelasId: kelasAktif.kelasId })
+        .then(function (r) {
+          muridKelas = r.murid;
           lukisMurid();
-          var segar = d.murid.filter(function (x) { return x.idMurid === id; })[0];
-          if (segar) bukaMurid(segar);
+          var segar = r.murid.filter(function (x) { return x.idMurid === id; })[0];
+          if (segar) {
+            bukaMurid(segar);
+            papar($("msg-dokumen"), "ok", "Rekod dokumen dikemas kini.");
+          }
         });
-      })
-      .catch(function (e) { papar($("msg-edit"), "err", e.message); });
+    }).catch(function (e) { papar($("msg-dokumen"), "err", e.message); });
   };
+
 
   $("btn-tutup").onclick = function () { $("kad-edit").hidden = true; muridAktif = null; };
 

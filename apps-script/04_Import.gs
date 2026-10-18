@@ -159,8 +159,9 @@ function _prosesImport(matriks, pelaku) {
     masuk.forEach(function (rec) {
       var lama = ikutId[rec.IdMurid];
       if (!lama) {
-        rec.Disahkan = false; rec.DisahkanOleh = ''; rec.DisahkanPada = '';
         rec.MedanDiubah = ''; rec.CatatanGuru = ''; rec.Aktif = true;
+        rec.StatusDokumen = ''; rec.TarikhHantarDokumen = '';
+        rec.CatatanDokumen = ''; rec.DokumenOleh = ''; rec.DokumenPada = '';
         rec.DiimportPada = sekarang; rec.DikemaskiniPada = sekarang;
         ikutId[rec.IdMurid] = rec;
         sedia.push(rec);
