@@ -77,6 +77,28 @@ semak('kepala wajib hilang -> import BERHENTI dan namakan lajurnya',
 tampalImport(matriks(MURID));
 jalankan('importDariHelaian()');
 
+console.log('\n== Staging dikosongkan selepas import ==');
+semak('ImportMentah dikosongkan supaya import kedua bermula bersih',
+  jalankan("(function(){var s=_ss().getSheetByName(HELAIAN.IMPORT_MENTAH); return s.getLastRow();})()") === 0,
+  'baris tinggal: ' + jalankan("_ss().getSheetByName(HELAIAN.IMPORT_MENTAH).getLastRow()"));
+
+semak('import KEDUA yang lebih kecil menanda murid yang hilang sebagai tidak aktif',
+  (function () {
+    // Tampal semula hanya 11 murid pertama (dua murid terakhir digugurkan).
+    tampalImport(matriks(MURID.slice(0, 11)));
+    var r = jalankan('importDariHelaian()');
+    var m13 = jalankan("cariBaris(HELAIAN.MURID,'IdMurid','100013')");
+    return r.tiadaLagi === 2 && m13.Aktif === false;
+  })(),
+  'Tanpa pengosongan staging, baris lama kekal dan tiadaLagi akan jadi 0.');
+
+semak('murid yang kembali dalam import ditandakan aktif semula',
+  (function () {
+    tampalImport(matriks(MURID));
+    jalankan('importDariHelaian()');
+    return jalankan("cariBaris(HELAIAN.MURID,'IdMurid','100013').Aktif") === true;
+  })());
+
 console.log('\n== Enjin kelayakan (SPK Bil. 1/2026) ==');
 jalankan("tetapPgk(1236,'ujian')");
 const nilai = (id) => jalankan(`(function(){

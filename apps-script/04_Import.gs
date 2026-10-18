@@ -252,10 +252,27 @@ function _prosesImport(matriks, pelaku) {
       Amaran: amaran.join(' | ')
     });
 
+    /**
+     * Kosongkan helaian staging selepas import berjaya.
+     *
+     * Tanpa ini: import berikutnya yang lebih kecil ditampal atas yang lama
+     * meninggalkan baris murid lama di bawahnya. Baris itu dibaca semula
+     * sebagai murid sah, jadi murid yang sudah bertukar sekolah kekal
+     * "aktif" selama-lamanya dan tidak pernah ditanda tiada dalam import.
+     * Kegagalan senyap yang hanya muncul pada import kedua.
+     */
+    var shMentah = _ss().getSheetByName(HELAIAN.IMPORT_MENTAH);
+    if (shMentah && shMentah.getLastRow() > 0 && shMentah.getLastColumn() > 0) {
+      shMentah.getRange(1, 1, shMentah.getLastRow(), shMentah.getLastColumn())
+        .clearContent();
+    }
+
     var ringkas = {
       barisDibaca: masuk.length, baharu: baharu, dikemaskini: dikemaskini,
       dilangkau: dilangkau, tiadaLagi: tiadaLagi, konflik: konflik.length,
-      amaran: amaran
+      amaran: amaran,
+      nota: 'Helaian ' + HELAIAN.IMPORT_MENTAH + ' dikosongkan supaya import ' +
+            'berikutnya bermula bersih.'
     };
     Logger.log(JSON.stringify(ringkas, null, 2));
     return ringkas;
