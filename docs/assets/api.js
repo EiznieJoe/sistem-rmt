@@ -63,6 +63,11 @@
       });
   }
 
+  /* Tindakan awam — tiada token. Hanya reset kata laluan. */
+  function awam(tindakan, data) {
+    return hantar({ tindakan: tindakan, data: data || {} });
+  }
+
   function logMasuk(emel, katalaluan) {
     return hantar({ tindakan: "logMasuk", emel: emel, katalaluan: katalaluan })
       .then(function (d) { simpan(d); return d; });
@@ -75,5 +80,5 @@
     return hantar({ tindakan: "logKeluar", token: s.token, data: {} }).catch(function () {});
   }
 
-  window.RMT = { panggil: panggil, logMasuk: logMasuk, logKeluar: logKeluar, sesi: ambil };
+  window.RMT = { panggil: panggil, awam: awam, logMasuk: logMasuk, logKeluar: logKeluar, sesi: ambil };
 })();

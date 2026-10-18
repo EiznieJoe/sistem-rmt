@@ -17,7 +17,10 @@
       <h1>Pengurusan Kelayakan RMT</h1>
       <p id="subtajuk">Rancangan Makanan Tambahan &middot; SPK Kewangan Bil. 1 Tahun 2026</p>
     </div>
-    <button type="button" id="btn-keluar" hidden>Log keluar</button>
+    <div class="actions actions-rapat">
+      <button type="button" id="btn-tukar-kl" hidden>Tukar kata laluan</button>
+      <button type="button" id="btn-keluar" hidden>Log keluar</button>
+    </div>
   </div>
 </header>
 
@@ -30,7 +33,47 @@
     <label>Kata laluan <input id="katalaluan" type="password" required autocomplete="current-password"></label>
     <button type="submit" class="primary" id="btn-masuk">Log masuk</button>
     <div class="msg" id="msg-masuk" hidden></div>
+    <p class="hint"><a href="#" id="pautan-lupa">Lupa kata laluan?</a></p>
   </form>
+
+  <!-- ===== LUPA KATA LALUAN ===== -->
+  <section id="pane-lupa" class="card card-sempit" hidden>
+    <h2>Reset kata laluan</h2>
+
+    <div id="lupa-langkah1">
+      <p class="hint">Masukkan emel akaun anda. Kami hantar kod 6 angka yang sah selama 30 minit.</p>
+      <label>Emel <input id="lupa-emel" type="email" autocomplete="username"></label>
+      <button type="button" class="primary" id="btn-minta-kod">Hantar kod</button>
+    </div>
+
+    <div id="lupa-langkah2" hidden>
+      <p class="hint">Semak peti masuk dan folder spam, kemudian masukkan kod di bawah.</p>
+      <label>Kod 6 angka
+        <input id="lupa-kod" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+      </label>
+      <label>Kata laluan baharu <span class="opt">(minimum 10 aksara)</span>
+        <input id="lupa-baru" type="password" autocomplete="new-password">
+      </label>
+      <button type="button" class="primary" id="btn-sah-kod">Tukar kata laluan</button>
+      <p class="hint"><a href="#" id="pautan-minta-semula">Hantar kod sekali lagi</a></p>
+    </div>
+
+    <div class="msg" id="msg-lupa" hidden></div>
+    <p class="hint"><a href="#" id="pautan-balik-masuk">Kembali ke log masuk</a></p>
+  </section>
+
+  <!-- ===== TUKAR KATA LALUAN ===== -->
+  <section id="pane-tukar" class="card card-sempit" hidden>
+    <h2>Tukar kata laluan</h2>
+    <label>Kata laluan semasa <input id="tk-lama" type="password" autocomplete="current-password"></label>
+    <label>Kata laluan baharu <span class="opt">(minimum 10 aksara)</span>
+      <input id="tk-baru" type="password" autocomplete="new-password"></label>
+    <div class="actions">
+      <button type="button" class="primary" id="btn-simpan-kl">Simpan</button>
+      <button type="button" id="btn-batal-kl">Batal</button>
+    </div>
+    <div class="msg" id="msg-tukar" hidden></div>
+  </section>
 
   <!-- ===== PENYELARAS ===== -->
   <section id="pane-selaras" hidden>

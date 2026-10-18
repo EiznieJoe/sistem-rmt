@@ -11,7 +11,7 @@ const { buatPersekitaran } = require('./stub-google');
 const { MURID, matriks } = require('./data-sintetik');
 
 const DIR = path.join(__dirname, '..', 'apps-script');
-const { global: g } = buatPersekitaran();
+const { global: g, emel: emelDihantar } = buatPersekitaran();
 const konteks = vm.createContext(g);
 fs.readdirSync(DIR).filter((f) => f.endsWith('.gs')).sort()
   .forEach((f) => vm.runInContext(fs.readFileSync(path.join(DIR, f), 'utf8'), konteks, { filename: f }));
@@ -280,6 +280,104 @@ semak('JSON rosak tidak menjatuhkan sistem',
 semak('ralat tak dijangka tidak membocorkan dalaman',
   (() => { const j = panggil({ tindakan: 'senaraiMurid', token: T1, data: {} });
            return j.ok === false && !/undefined|TypeError|_baris|getRange/.test(j.ralat); })());
+
+console.log('\n== Reset kata laluan melalui emel ==');
+function kodTerakhir() {
+  var e = emelDihantar();
+  if (!e.length) return null;
+  var m = String(e[e.length - 1].body).match(/ialah: (\d{6})/);
+  return m ? m[1] : null;
+}
+semak('minta kod untuk emel SAH -> emel dihantar',
+  (() => { const n = emelDihantar().length;
+           const r = panggil({ tindakan: 'mintaResetKod', data: { emel: 'guru1@sk.my' } });
+           return r.ok && emelDihantar().length === n + 1 && /\d{6}/.test(emelDihantar()[n].body); })());
+semak('emel dihantar ke alamat yang betul',
+  emelDihantar()[emelDihantar().length - 1].to === 'guru1@sk.my');
+semak('kod TIDAK disimpan sebagai teks biasa dalam helaian',
+  (() => { const kod = kodTerakhir();
+           return !JSON.stringify(jalankan('bacaSemua(HELAIAN.ResetKod || "ResetKod")')).includes(kod); })(),
+  'kod sepatutnya di-hash');
+
+semak('emel TIDAK WUJUD beri jawapan yang SAMA (tiada kebocoran akaun)',
+  (() => { const n = emelDihantar().length;
+           const a = panggil({ tindakan: 'mintaResetKod', data: { emel: 'hantu@x.my' } });
+           const b = panggil({ tindakan: 'mintaResetKod', data: { emel: 'guru1@sk.my' } });
+           return a.data.mesej === b.data.mesej && emelDihantar().length === n + 1; })(),
+  'hanya satu emel sepatutnya dihantar — untuk akaun yang wujud sahaja');
+
+semak('kod salah ditolak', (() => {
+  const r = panggil({ tindakan: 'sahkanResetKod',
+    data: { emel: 'guru1@sk.my', kod: '000000', kataLaluanBaru: 'KataLaluanBaru1' } });
+  return r.ok === false && /tidak sah|tamat tempoh/.test(r.ralat); })());
+
+semak('kata laluan baharu terlalu pendek ditolak',
+  /sekurang-kurangnya/.test(panggil({ tindakan: 'sahkanResetKod',
+    data: { emel: 'guru1@sk.my', kod: kodTerakhir(), kataLaluanBaru: 'pendek' } }).ralat));
+
+const KOD = kodTerakhir();
+semak('kod BETUL menukar kata laluan',
+  panggil({ tindakan: 'sahkanResetKod',
+    data: { emel: 'guru1@sk.my', kod: KOD, kataLaluanBaru: 'KataLaluanBaru1' } }).ok === true);
+semak('kata laluan LAMA tidak lagi berfungsi',
+  panggil({ tindakan: 'logMasuk', emel: 'guru1@sk.my', katalaluan: 'KataLaluanKuat1' }).ok === false);
+semak('kata laluan BAHARU berfungsi',
+  panggil({ tindakan: 'logMasuk', emel: 'guru1@sk.my', katalaluan: 'KataLaluanBaru1' }).ok === true);
+semak('kod yang sama tidak boleh diguna semula',
+  panggil({ tindakan: 'sahkanResetKod',
+    data: { emel: 'guru1@sk.my', kod: KOD, kataLaluanBaru: 'KataLaluanLain99' } }).ok === false);
+semak('reset membatalkan sesi lama',
+  panggil({ tindakan: 'kelasSaya', token: T1 }).ok === false);
+
+semak('5 kod salah membatalkan kod itu',
+  (() => { panggil({ tindakan: 'mintaResetKod', data: { emel: 'guru2@sk.my' } });
+           const kod = kodTerakhir();
+           for (let i = 0; i < 5; i++) {
+             panggil({ tindakan: 'sahkanResetKod',
+               data: { emel: 'guru2@sk.my', kod: '111111', kataLaluanBaru: 'KataLaluanBaru2' } });
+           }
+           const r = panggil({ tindakan: 'sahkanResetKod',
+             data: { emel: 'guru2@sk.my', kod: kod, kataLaluanBaru: 'KataLaluanBaru2' } });
+           return r.ok === false; })(),
+  'kod betul pun patut ditolak selepas had percubaan');
+
+semak('had 3 permintaan kod per emel per jam',
+  (() => { const e = 'selaras@sk.my';
+           let hantar = 0;
+           for (let i = 0; i < 6; i++) {
+             const n = emelDihantar().length;
+             panggil({ tindakan: 'mintaResetKod', data: { emel: e } });
+             if (emelDihantar().length > n) hantar++;
+           }
+           return hantar === 3; })(),
+  'emel dihantar sepatutnya berhenti pada 3');
+
+console.log('\n== Tukar kata laluan sendiri ==');
+const TG = panggil({ tindakan: 'logMasuk', emel: 'guru1@sk.my', katalaluan: 'KataLaluanBaru1' }).data.token;
+semak('kata laluan lama salah ditolak',
+  /lama salah/.test(panggil({ tindakan: 'tukarKataLaluan', token: TG,
+    data: { kataLaluanLama: 'salahlah123', kataLaluanBaru: 'KataLaluanKe3x' } }).ralat));
+semak('kata laluan baharu sama dengan lama ditolak',
+  /mesti berbeza/.test(panggil({ tindakan: 'tukarKataLaluan', token: TG,
+    data: { kataLaluanLama: 'KataLaluanBaru1', kataLaluanBaru: 'KataLaluanBaru1' } }).ralat));
+semak('tukar berjaya dengan kata laluan lama yang betul',
+  panggil({ tindakan: 'tukarKataLaluan', token: TG,
+    data: { kataLaluanLama: 'KataLaluanBaru1', kataLaluanBaru: 'KataLaluanKe3x' } }).ok === true);
+semak('tukar kata laluan membatalkan sesi semasa',
+  panggil({ tindakan: 'kelasSaya', token: TG }).ok === false);
+semak('tanpa token ditolak',
+  panggil({ tindakan: 'tukarKataLaluan', token: '',
+    data: { kataLaluanLama: 'a', kataLaluanBaru: 'b' } }).ok === false);
+
+console.log('\n== Reset oleh pentadbir (editor) ==');
+semak('pentadbir boleh reset dan dapat kata laluan sementara',
+  (() => { const teks = jalankan("resetKataLaluanPegawai('guru1@sk.my')");
+           const m = String(teks).match(/RMT-\d{6}-\d{6}/);
+           if (!m) return false;
+           return panggil({ tindakan: 'logMasuk', emel: 'guru1@sk.my', katalaluan: m[0] }).ok === true; })());
+semak('reset pentadbir untuk emel tiada -> ralat jelas',
+  (() => { try { jalankan("resetKataLaluanPegawai('hantu@x.my')"); return false; }
+           catch (e) { return /tiada dalam helaian Staf/.test(e.message); } })());
 
 console.log('\n== Jejak audit ==');
 r = panggil({ tindakan: 'audit', token: TS, data: { idMurid: '100004' } });

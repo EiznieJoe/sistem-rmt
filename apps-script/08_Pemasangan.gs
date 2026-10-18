@@ -41,7 +41,8 @@ function pasang() {
   _pepper();
   log.push('PEPPER ada dalam Script Properties.');
 
-  [HELAIAN.AUDIT, HELAIAN.SESI_LOGIN, HELAIAN.HAD, HELAIAN.IMPORT_LOG]
+  [HELAIAN.AUDIT, HELAIAN.SESI_LOGIN, HELAIAN.HAD, HELAIAN.IMPORT_LOG,
+     HELAIAN.RESET_KOD]
     .forEach(function (nama) {
       var sh = ss.getSheetByName(nama);
       if (sh && !sh.getProtections(SpreadsheetApp.ProtectionType.SHEET).length) {

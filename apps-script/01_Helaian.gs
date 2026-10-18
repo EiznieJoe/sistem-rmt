@@ -182,6 +182,37 @@ function auditBanyak(senarai) {
   }));
 }
 
+/**
+ * Kaunter had percubaan, disimpan dalam helaian.
+ *
+ * Bukan CacheService: Cache boleh dikosongkan tanpa amaran, dan had yang
+ * hilang senyap-senyap adalah had yang tidak wujud. Helaian Had
+ * dibersihkan oleh sweepHarian().
+ */
+function kiraCubaan(kunci, tempohMs) {
+  var sekarang = new Date().getTime();
+  var ada = cariBaris(HELAIAN.HAD, 'Kunci', kunci);
+  if (!ada) {
+    tambahBaris(HELAIAN.HAD, {
+      Kunci: kunci, Bil: 1, ResetPada: new Date(sekarang + tempohMs)
+    });
+    return 1;
+  }
+  var reset = new Date(ada.ResetPada).getTime();
+  var tamat = isNaN(reset) || reset < sekarang;
+  var bil = tamat ? 1 : Number(ada.Bil || 0) + 1;
+  kemasBaris(HELAIAN.HAD, ada._baris, {
+    Bil: bil,
+    ResetPada: tamat ? new Date(sekarang + tempohMs) : ada.ResetPada
+  });
+  return bil;
+}
+
+function kosongkanCubaan(kunci) {
+  var ada = cariBaris(HELAIAN.HAD, 'Kunci', kunci);
+  if (ada) _helaian(HELAIAN.HAD).deleteRow(ada._baris);
+}
+
 /** Kunci kelas: Tahun + NamaKelas. NamaKelas sahaja TIDAK unik. */
 function kelasId(tahun, namaKelas) {
   return bersihTeks(tahun, 60).toUpperCase() + ' | ' + bersihTeks(namaKelas, 60).toUpperCase();

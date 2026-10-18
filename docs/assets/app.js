@@ -20,10 +20,82 @@
   };
   $("btn-keluar").onclick = function () { RMT.logKeluar().then(function () { location.reload(); }); };
 
+  /* ---------- Lupa kata laluan (tanpa log masuk) ---------- */
+  function papar2(id) {
+    ["borang-masuk", "pane-lupa"].forEach(function (x) { $(x).hidden = x !== id; });
+    sorok($("msg-lupa")); sorok($("msg-masuk"));
+  }
+  $("pautan-lupa").onclick = function (e) {
+    e.preventDefault();
+    $("lupa-emel").value = $("emel").value.trim();
+    $("lupa-langkah2").hidden = true;
+    $("lupa-langkah1").hidden = false;
+    papar2("pane-lupa");
+  };
+  $("pautan-balik-masuk").onclick = function (e) { e.preventDefault(); papar2("borang-masuk"); };
+
+  function mintaKod() {
+    var emel = $("lupa-emel").value.trim();
+    if (!emel) return papar($("msg-lupa"), "err", "Masukkan emel anda.");
+    papar($("msg-lupa"), "info", "Menghantar\u2026");
+    RMT.awam("mintaResetKod", { emel: emel })
+      .then(function (d) {
+        /* Mesej sengaja sama sama ada emel itu wujud atau tidak — endpoint
+           ini tidak boleh dipakai untuk menyenaraikan akaun yang wujud. */
+        papar($("msg-lupa"), "ok", d.mesej);
+        $("lupa-langkah1").hidden = true;
+        $("lupa-langkah2").hidden = false;
+      })
+      .catch(function (e) { papar($("msg-lupa"), "err", e.message); });
+  }
+  $("btn-minta-kod").onclick = mintaKod;
+  $("pautan-minta-semula").onclick = function (e) { e.preventDefault(); mintaKod(); };
+
+  $("btn-sah-kod").onclick = function () {
+    var emel = $("lupa-emel").value.trim();
+    var kod = $("lupa-kod").value.replace(/\D/g, "");
+    var baru = $("lupa-baru").value;
+    if (kod.length !== 6) return papar($("msg-lupa"), "err", "Kod mesti 6 angka.");
+    if (baru.length < 10) return papar($("msg-lupa"), "err", "Kata laluan baharu minimum 10 aksara.");
+    papar($("msg-lupa"), "info", "Memproses\u2026");
+    RMT.awam("sahkanResetKod", { emel: emel, kod: kod, kataLaluanBaru: baru })
+      .then(function (d) {
+        papar($("msg-masuk"), "ok", d.mesej);
+        $("emel").value = emel;
+        $("katalaluan").value = "";
+        $("lupa-kod").value = ""; $("lupa-baru").value = "";
+        papar2("borang-masuk");
+      })
+      .catch(function (e) { papar($("msg-lupa"), "err", e.message); });
+  };
+
+  /* ---------- Tukar kata laluan (sudah log masuk) ---------- */
+  $("btn-tukar-kl").onclick = function () {
+    $("pane-tukar").hidden = false;
+    $("tk-lama").value = ""; $("tk-baru").value = "";
+    sorok($("msg-tukar"));
+    $("pane-tukar").scrollIntoView({ behavior: "smooth" });
+  };
+  $("btn-batal-kl").onclick = function () { $("pane-tukar").hidden = true; };
+  $("btn-simpan-kl").onclick = function () {
+    var lama = $("tk-lama").value, baru = $("tk-baru").value;
+    if (baru.length < 10) return papar($("msg-tukar"), "err", "Kata laluan baharu minimum 10 aksara.");
+    papar($("msg-tukar"), "info", "Memproses\u2026");
+    RMT.panggil("tukarKataLaluan", { kataLaluanLama: lama, kataLaluanBaru: baru })
+      .then(function (d) {
+        /* Tukar kata laluan membatalkan semua sesi, termasuk yang ini. */
+        alert(d.mesej);
+        location.reload();
+      })
+      .catch(function (e) { papar($("msg-tukar"), "err", e.message); });
+  };
+
   function mula(d) {
     saya = d;
     $("borang-masuk").hidden = true;
+    $("pane-lupa").hidden = true;
     $("btn-keluar").hidden = false;
+    $("btn-tukar-kl").hidden = false;
     $("subtajuk").textContent = d.nama + " — " + d.peranan;
     if (d.peranan === "penyelaras" || d.peranan === "admin") {
       $("pane-selaras").hidden = false;

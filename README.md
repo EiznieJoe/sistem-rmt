@@ -196,6 +196,35 @@ Node single-threaded).
 
 ---
 
+## Kata laluan
+
+Tiga laluan, kerana pentadbir sistem selalunya bukan orang yang guna sistem:
+
+| Keadaan | Jalan |
+|---|---|
+| Lupa kata laluan | "Lupa kata laluan?" di skrin log masuk — kod 6 angka dihantar ke emel pegawai, sah 30 minit |
+| Mahu tukar | Butang "Tukar kata laluan" selepas log masuk; perlu kata laluan semasa |
+| Emel pegawai pun bermasalah | Pentadbir jalankan `resetKataLaluanPegawai('emel')` dari editor; kata laluan sementara dipapar sekali dalam log |
+
+Butiran yang penting:
+
+- **Kod disimpan sebagai hash bersalt**, bukan teks biasa. Sesiapa yang boleh
+  baca helaian `ResetKod` tetap tidak boleh menggunakan kodnya.
+- **Jawapan sama tanpa mengira emel itu wujud atau tidak.** Endpoint ini tiada
+  auth, jadi jawapan yang berbeza akan menjadikannya alat untuk menyenaraikan
+  akaun yang wujud.
+- **Had 3 permintaan kod per emel per jam**, supaya ia tidak boleh dipakai
+  membanjiri peti masuk seseorang atau menghabiskan kuota emel harian.
+- **5 kod salah membatalkan kod itu** — kod betul pun ditolak selepas itu.
+- **Menukar kata laluan membatalkan semua sesi**, termasuk sesi semasa. Kalau
+  akaun memang dirampas, menukar kata laluan mesti menendang keluar penceroboh.
+
+Emel dihantar melalui `MailApp` sebagai akaun yang deploy script. Had harian:
+100 penerima untuk akaun Gmail biasa, 1,500 untuk Google Workspace. Untuk ~31
+staf itu jauh lebih dari cukup. Nota jujur: emel datang dari alamat peribadi
+akaun yang deploy, bukan domain sekolah, jadi ada kemungkinan masuk folder
+spam. Deploy dari akaun Workspace sekolah akan menghapuskan masalah itu.
+
 ## Had yang perlu difahami
 
 **Jejak audit lebih lemah dari pangkalan data sebenar.** Dalam Postgres,

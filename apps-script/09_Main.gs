@@ -11,8 +11,19 @@
  * Badan tetap JSON dan dihurai di sini.
  */
 
+/**
+ * Tindakan AWAM — tiada token. Hanya ini. Semua yang lain perlukan sesi.
+ * Kedua-duanya menjaga dirinya sendiri: had permintaan per emel, dan
+ * jawapan yang sama tanpa mengira emel itu wujud atau tidak.
+ */
+var TINDAKAN_AWAM = {
+  mintaResetKod:   function (d) { return mintaResetKod(d); },
+  sahkanResetKod:  function (d) { return sahkanResetKod(d); }
+};
+
 var TINDAKAN = {
   logKeluar:        function (t) { return logKeluar(t); },
+  tukarKataLaluan:  function (t, d) { return tukarKataLaluan(t, d); },
   kelasSaya:        function (t) { return guruKelasSaya(t); },
   senaraiMurid:     function (t, d) { return guruSenaraiMurid(t, d); },
   kemasMurid:       function (t, d) { return guruKemasMurid(t, d); },
@@ -51,6 +62,9 @@ function doPost(e) {
   try {
     if (tindakan === 'logMasuk') {
       return _balas({ ok: true, data: logMasuk(badan.emel, badan.katalaluan) });
+    }
+    if (TINDAKAN_AWAM[tindakan]) {
+      return _balas({ ok: true, data: TINDAKAN_AWAM[tindakan](data) });
     }
     if (TINDAKAN[tindakan]) {
       return _balas({ ok: true, data: TINDAKAN[tindakan](token, data) });

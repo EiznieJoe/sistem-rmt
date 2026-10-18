@@ -15,6 +15,7 @@ var HELAIAN = {
   KELAS:         'Kelas',
   STAF:          'Staf',
   SESI_LOGIN:    'SesiLogin',
+  RESET_KOD:     'ResetKod',
   MURID:         'Murid',
   AUDIT:         'Audit',
   TETAPAN:       'Tetapan',
@@ -78,6 +79,10 @@ var LAJUR = {
   Audit: ['Masa', 'IdMurid', 'PelakuEmel', 'PelakuLabel', 'Tindakan',
           'Sebab', 'Perubahan'],
 
+  /* Kod reset kata laluan. Kod disimpan sebagai hash, bukan teks biasa —
+     sesiapa yang dapat baca helaian ini tetap tidak boleh menggunakannya. */
+  ResetKod:  ['Emel', 'Salt', 'KodHash', 'TamatPada', 'Cuba', 'DiciptaPada'],
+
   Tetapan:   ['Kunci', 'Nilai', 'Nota'],
   Had:       ['Kunci', 'Bil', 'ResetPada'],
   ImportLog: ['Masa', 'PelakuEmel', 'BarisDibaca', 'Baharu', 'Dikemaskini',
@@ -108,6 +113,12 @@ var SESI_JAM            = 8;
 var HAD_LOGIN_CUBAAN    = 8;
 var HAD_LOGIN_TEMPOH    = 300;
 var PANJANG_TEKS_MAKS   = 1000;
+
+/* Reset kata laluan */
+var RESET_TEMPOH_MINIT  = 30;   // tempoh hayat kod
+var RESET_HAD_MINTA     = 3;    // permintaan kod per emel per jam
+var RESET_HAD_CUBAAN    = 5;    // percubaan kod salah sebelum kod dibatalkan
+var KATALALUAN_MIN      = 10;
 
 /**
  * Tetapan lalai.

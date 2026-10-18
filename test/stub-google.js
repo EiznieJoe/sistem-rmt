@@ -127,6 +127,11 @@ function buatPersekitaran() {
       }
     },
     Logger: { log: (m) => log.push(String(m)) },
+    MailApp: {
+      _emel: [],
+      sendEmail(o) { g.MailApp._emel.push(o); },
+      getRemainingDailyQuota: () => 100
+    },
     ScriptApp: {
       getProjectTriggers: () => [], deleteTrigger: () => {},
       newTrigger: () => ({ timeBased: () => ({ atHour: () => ({ everyDays: () => ({ create: () => {} }) }) }) })
@@ -137,7 +142,7 @@ function buatPersekitaran() {
     }
   };
   g.globalThis = g;
-  return { global: g, log, helaian };
+  return { global: g, log, helaian, emel: () => g.MailApp._emel };
 }
 
 module.exports = { buatPersekitaran };

@@ -125,3 +125,8 @@ ol.trail li { padding: 7px 0; border-bottom: 1px solid var(--line); }
 ol.trail time { color: var(--ink-3); font-size: .78rem; display: block; }
 footer.site { padding: 20px; text-align: center; font-size: .8rem; color: var(--ink-3); }
 footer.site a, header.site a { color: inherit; }
+
+label .opt { font-weight: 400; color: var(--ink-3); }
+a { color: var(--brand); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) a { color: #6cc090; } }
+.actions-rapat { margin: 0; }
