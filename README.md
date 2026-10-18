@@ -135,9 +135,13 @@ hilang, import berhenti dan menamakannya — ia tidak meneka.
 Akaun dan tugasan kelas **sengaja diasingkan**, kerana guru kelas bertukar
 setiap tahun. Tukar guru = tukar satu baris, tanpa import semula.
 
+Argumen terakhir ialah kod sekolah. Ia mesti sama dengan nilai `sekolah_kod`
+dalam helaian **Tetapan** — di situlah kod sebenar sekolah anda disimpan, bukan
+dalam repo ini. `ABC1234` di bawah hanyalah contoh.
+
 ```javascript
-daftarPegawai('selaras@sekolah.edu.my', 'Pn. Siti', 'penyelaras', 'KataLaluanPanjang', 'XBA4382');
-daftarPegawai('guru1@sekolah.edu.my',  'Cikgu Aminah', 'guru',    'KataLaluanPanjang', 'XBA4382');
+daftarPegawai('selaras@sekolah.edu.my', 'Pn. Siti', 'penyelaras', 'KataLaluanPanjang', 'ABC1234');
+daftarPegawai('guru1@sekolah.edu.my',  'Cikgu Aminah', 'guru',    'KataLaluanPanjang', 'ABC1234');
 
 kelasTanpaGuru();                                        // kelas mana belum ada guru
 tugaskanGuru('TAHUN SATU | GIGIH', 'guru1@sekolah.edu.my');
