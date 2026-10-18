@@ -130,3 +130,6 @@ label .opt { font-weight: 400; color: var(--ink-3); }
 a { color: var(--brand); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) a { color: #6cc090; } }
 .actions-rapat { margin: 0; }
+.mt-md { margin-top: 16px; }
+.m0    { margin: 0; }
+.h-sub { margin-top: 20px; font-size: .92rem; }
