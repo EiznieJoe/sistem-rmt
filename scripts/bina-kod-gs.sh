@@ -23,7 +23,7 @@ OUT=Kod.gs
   echo " * Sumber: https://github.com/EiznieJoe/sistem-rmt"
   echo " */"
   echo
-  for f in apps-script/0*.gs; do
+  for f in apps-script/*.gs; do
     echo "/* ============================================================="
     echo "   $(basename "$f")"
     echo "   ============================================================= */"
