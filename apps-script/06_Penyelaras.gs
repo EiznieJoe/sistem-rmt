@@ -121,9 +121,40 @@ function penyelarasSenarai(token, data) {
 var TETAPAN_PENYELARAS = ['pgk_miskin_tegar', 'pgk_per_kapita', 'kadar_sehari',
                           'hari_persekolahan', 'kira_kelas_khas', 'kira_prasekolah'];
 
+/**
+ * Tambah baris TETAPAN_LALAI yang belum ada dalam helaian Tetapan.
+ *
+ * Tanpa ini, tetapan yang ditambah selepas helaian dicipta tidak akan
+ * muncul langsung dalam UI — ia menapis baris yang wujud, dan baris itu
+ * hanya ditulis semasa pasang(). Jadi penyelaras nampak tetapan hilang
+ * tanpa sebab yang jelas.
+ *
+ * Hanya mengunci bila ada yang hilang, supaya bacaan biasa kekal murah.
+ */
+function _lengkapkanTetapan(semua) {
+  var ada = semua.map(function (t) { return String(t.Kunci); });
+  var hilang = TETAPAN_LALAI.filter(function (t) {
+    return TETAPAN_PENYELARAS.indexOf(t[0]) >= 0 && ada.indexOf(t[0]) < 0;
+  });
+  if (!hilang.length) return semua;
+
+  return dgnKunci(function () {
+    // Baca semula di dalam kunci — proses lain mungkin sudah menambahnya.
+    var kini = bacaSemua(HELAIAN.TETAPAN);
+    var adaKini = kini.map(function (t) { return String(t.Kunci); });
+    hilang.forEach(function (t) {
+      if (adaKini.indexOf(t[0]) < 0) {
+        tambahBaris(HELAIAN.TETAPAN, { Kunci: t[0], Nilai: t[1], Nota: t[2] });
+        audit('', 'TETAPAN_DILENGKAPKAN', t[0], { nilai: t[1] }, null);
+      }
+    });
+    return bacaSemua(HELAIAN.TETAPAN);
+  });
+}
+
 function penyelarasTetapan(token) {
   perluAuth(token, [PERANAN.PENYELARAS]);
-  var semua = bacaSemua(HELAIAN.TETAPAN);
+  var semua = _lengkapkanTetapan(bacaSemua(HELAIAN.TETAPAN));
   return {
     tetapan: semua.filter(function (t) {
       return TETAPAN_PENYELARAS.indexOf(String(t.Kunci)) >= 0;

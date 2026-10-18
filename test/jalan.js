@@ -455,6 +455,34 @@ semak('pembetulan guru direkod dengan nilai sebelum dan selepas',
   r.data.audit.some((a) => a.tindakan === 'GURU_KEMASKINI' && /650/.test(a.perubahan)),
   JSON.stringify(r.data.audit.map((a) => a.tindakan)));
 
+console.log('\n== Tetapan yang hilang dilengkapkan sendiri ==');
+// Tiru helaian lama: baris pgk_per_kapita dipadam sepenuhnya, macam sheet
+// yang dibina sebelum tetapan itu wujud.
+jalankan(`(function(){
+  var t = cariBaris(HELAIAN.TETAPAN,'Kunci','pgk_per_kapita');
+  if (t) _ss().getSheetByName(HELAIAN.TETAPAN).deleteRow(t._baris);
+})()`);
+semak('baris pgk_per_kapita betul-betul tiada',
+  jalankan("!cariBaris(HELAIAN.TETAPAN,'Kunci','pgk_per_kapita')"));
+
+r = panggil({ tindakan: 'tetapan', token: TS });
+semak('penyelaras nampak pgk_per_kapita walaupun baris asalnya hilang',
+  r.data.tetapan.some((t) => t.kunci === 'pgk_per_kapita'),
+  JSON.stringify(r.data.tetapan.map((t) => t.kunci)));
+semak('baris ditulis semula ke helaian, bukan sekadar dipaparkan',
+  jalankan("!!cariBaris(HELAIAN.TETAPAN,'Kunci','pgk_per_kapita')"));
+semak('nilai lalai kosong — peringkat 2 kekal mati sampai penyelaras isi',
+  jalankan("String(cariBaris(HELAIAN.TETAPAN,'Kunci','pgk_per_kapita').Nilai)") === '',
+  jalankan("String(cariBaris(HELAIAN.TETAPAN,'Kunci','pgk_per_kapita').Nilai)"));
+semak('dilengkapkan sekali sahaja, tidak berganda bila dipanggil lagi',
+  (() => { const a = jalankan('bacaSemua(HELAIAN.TETAPAN).length');
+           panggil({ tindakan: 'tetapan', token: TS });
+           return jalankan('bacaSemua(HELAIAN.TETAPAN).length') === a; })());
+semak('tindakan direkod dalam jejak audit sebagai sistem',
+  jalankan(`bacaSemua(HELAIAN.AUDIT).some(function(a){
+    return a.Tindakan === 'TETAPAN_DILENGKAPKAN' && a.PelakuLabel === 'sistem';
+  })`));
+
 console.log('\n' + '='.repeat(58));
 console.log('  ' + lulus + ' lulus, ' + gagal + ' gagal');
 if (gagal) console.log('  Gagal: ' + kegagalan.join(', '));
